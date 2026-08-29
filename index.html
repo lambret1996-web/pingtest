@@ -249,7 +249,24 @@ const addBtn = document.getElementById("addBtn");
         document.getElementById("isp").textContent = "获取失败";
     }
 })();
+// 获取北京时间（东八区UTC+8，不受本机时区影响）
+function updateBeijingTime(){
+    const now = new Date();
+    // 获取UTC时间毫秒，加上8小时偏移
+    const beijingTs = now.getTime() + 8 * 3600 * 1000;
+    const bj = new Date(beijingTs);
 
+    const y = bj.getUTCFullYear();
+    const m = String(bj.getUTCMonth()+1).padStart(2,'0');
+    const d = String(bj.getUTCDate()).padStart(2,'0');
+    const h = String(bj.getUTCHours()).padStart(2,'0');
+    const mi = String(bj.getUTCMinutes()).padStart(2,'0');
+    const s = String(bj.getUTCSeconds()).padStart(2,'0');
+
+    document.getElementById("nowTime").innerText = `${y}-${m}-${d} ${h}:${mi}:${s}`;
+}
+updateBeijingTime();
+setInterval(updateBeijingTime, 1000);
 // 渲染列表
 function renderList() {
     listWrap.innerHTML = "";
