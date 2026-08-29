@@ -1,6 +1,42 @@
 export default {
   async fetch(request, env) {
+        // ========== 登录密码配置 ==========
+    const USERNAME = "admin";   // 自定义用户名
+    const PASSWORD = "123456";  // 自定义密码
+    // 需要加密的路径，空数组=全站加密
+    const PROTECT_PATHS = ["/stats.html", "/list", "/ip-list", "/save"];
+    // =================================
+
     const url = new URL(request.url);
+
+    // 判断当前路径是否需要验证
+    const needAuth = PROTECT_PATHS.length === 0 
+      ? true 
+      : PROTECT_PATHS.some(p => url.pathname.startsWith(p));
+
+    if (needAuth) {
+      const authHeader = request.headers.get("Authorization");
+      let valid = false;
+
+      if (authHeader && authHeader.startsWith("Basic ")) {
+        try {
+          const base64 = authHeader.slice(6);
+          const decoded = atob(base64);
+          const [user, pass] = decoded.split(":");
+          valid = (user === USERNAME && pass === PASSWORD);
+        } catch (e) {}
+      }
+
+      if (!valid) {
+        return new Response("需要登录才能访问", {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="受保护区域"',
+            "Content-Type": "text/plain;charset=utf-8"
+          }
+        });
+      }
+    }
     const kv = env.KV;
 
     // 工具函数：获取北京时间（UTC+8），返回格式化字符串 YYYY-MM-DD HH:mm:ss
