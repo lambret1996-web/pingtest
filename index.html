@@ -54,6 +54,11 @@ body {
     border-radius: 14px;
     padding: 12px;
 }
+    .time-line {
+    margin-top: 8px;
+    color: #dc2626;  /* 暗红色，修改这里的色值可以换颜色 */
+    font-weight: 600;
+    }
 .add-row {
     display: flex;
     gap: 8px;
@@ -179,13 +184,16 @@ button:active {
     font-weight: 600;
 }
 </style>
+   
 </head>
 <body>
 <div class="page-title">网页延迟测试工具</div>
 <div class="card">
     <div class="ip-bar">
-    IP：<span id="clientIp">获取中</span> | 位置：<span id="location">获取中</span> | ISP运营商：<span id="isp">获取中</span> | 当前北京时间：<span id="nowTime">--</span>
+    IP：<span id="clientIp">获取中</span> | 位置：<span id="location">获取中</span> | 运营商：<span id="isp">获取中</span>
+    <div class="time-line">北京时间：<span id="nowTime">--</span></div>
 </div>
+    
     <div class="add-row">
         <input id="siteName" placeholder="站点名称">
         <input id="siteUrl" placeholder="域名/主页地址">
@@ -203,6 +211,7 @@ button:active {
     </div>
     <div id="listWrap"></div>
 </div>
+    
 
 <script>
 // 站点列表：url=测速用图标地址，link=点击跳转地址
