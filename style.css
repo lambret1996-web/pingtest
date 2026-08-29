@@ -104,7 +104,7 @@ button:active {
 .item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 7px;
     padding: 14px 4px;
     border-bottom: 1px solid #e2e8f0;
     flex-wrap: nowrap;
@@ -115,8 +115,8 @@ button:active {
 }
 
 .icon-img {
-    width: 26px;
-    height:26px;
+    width: 24px;
+    height:24px;
     flex-shrink: 0;
     border-radius:6px;
     object-fit:cover;
@@ -124,7 +124,7 @@ button:active {
 
 .name {
     flex: 1;
-    min-width: 60px;
+    min-width: 80px;
     font-size: 15px;
     font-weight: 600;
     white-space: nowrap;
@@ -134,10 +134,10 @@ button:active {
 }
 
 .tag {
-    width: 56px;
-    padding: 3px 2px;
+    width: 46px;
+    padding: 2px 1px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 10px;
     text-align: center;
     flex-shrink: 0;
     font-weight: 500;
@@ -154,16 +154,16 @@ button:active {
 }
 
 .ms {
-    width: 72px;
-    font-size: 16px;
+    width: 62px;
+    font-size: 15px;
     font-weight: 700;
     text-align: right;
     flex-shrink: 0;
 }
 
 .loss {
-    width: 62px;
-    font-size: 15px;
+    width: 52px;
+    font-size: 14px;
     font-weight: 600;
     text-align: right;
     flex-shrink: 0;
@@ -171,15 +171,15 @@ button:active {
 
 .dot-group {
     display: flex;
-    gap: 3px;
+    gap: 2px;
     flex-shrink: 0;
-    width: 88px;
+    width: 72px;
     justify-content: flex-start;
 }
 
 .dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: #e2e8f0;
     flex-shrink: 0;
@@ -189,10 +189,11 @@ button:active {
 .yellow { background-color: #ecc94b; }
 .red { background-color: #f56565; }
 
-@media (max-width: 420px){
-    .tag { width: 48px; }
-    .ms { width: 64px; }
-    .loss { width: 54px; }
-    .dot-group { width:72px; gap:2px; }
-    .dot { width:6px;height:6px; }
+@media (max-width: 380px){
+    .tag { width: 40px; }
+    .ms { width: 56px; }
+    .loss { width: 46px; }
+    .dot-group { width:62px; gap:1px; }
+    .dot { width:5px;height:5px; }
+    .name { min-width: 65px; }
 }
