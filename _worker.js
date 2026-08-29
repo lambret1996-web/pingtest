@@ -55,7 +55,7 @@ export default {
       return Response.json(list);
     }
 
-    // 其他所有路径，正常返回你的网页
+    // 其他路径返回网页
     return env.ASSETS.fetch(request);
   }
 };
