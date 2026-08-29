@@ -120,13 +120,14 @@ button:active {
     transform: scale(0.96);
 }
 
+/* 列宽分配：网站列加宽，其余三列收窄 */
 .table-header,
 .item {
     display: grid;
-    grid-template-columns: 140px 70px 70px 1fr;
+    grid-template-columns: 2.2fr 1fr 1fr 1fr;
     align-items: center;
     width: 100%;
-    gap: 10px;
+    gap: 8px;
 }
 
 .table-header {
@@ -145,36 +146,19 @@ button:active {
     border-bottom: none;
 }
 
-.c-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.icon-img {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    border-radius: 6px;
-    object-fit: cover;
-}
-
+/* 删除图标，网站名称左对齐，完整显示名称，不再截断 */
 .name {
-    flex: 1;
-    min-width: 0;
     font-size: 16px;
     font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     color: #e2e8f0;
+    white-space: normal;
+    word-break: break-all;
 }
 
-.h-tag,
-.c-tag {
-    text-align: center;
-}
+/* 表头与单元格对齐 */
+.h-name { text-align: left; }
+.h-tag, .h-ms, .h-loss { text-align: center; }
+.c-tag, .c-ms, .c-loss { text-align: center; }
 
 .tag {
     display: inline-block;
@@ -196,35 +180,14 @@ button:active {
     border: 1px solid rgba(167, 139, 250, 0.35);
 }
 
-.h-ms,
-.c-ms {
-    text-align: right;
-}
-
 .ms {
     font-size: 16px;
     font-weight: 700;
 }
 
-.h-loss,
-.c-loss {
-    text-align: right;
-}
-
 .loss {
     font-size: 16px;
     font-weight: 600;
-}
-
-@media (max-width: 360px) {
-    .table-header,
-    .item {
-        grid-template-columns: 110px 60px 60px 1fr;
-    }
-
-    .name {
-        font-size: 15px;
-    }
 }
 </style>
 </head>
@@ -245,8 +208,8 @@ button:active {
     </div>
 
     <div class="table-header">
-        <div class="h-name">   网站</div>
-        <div class="h-tag">类别</div>
+        <div class="h-name">  网 站</div>
+        <div class="h-tag">类型</div>
         <div class="h-ms">ping</div>
         <div class="h-loss">丢包率</div>
     </div>
@@ -256,16 +219,16 @@ button:active {
 
 <script>
 let siteList = [
-    {name:"和平精英",tag:"国内",url:"https://gp.qq.com/favicon.ico",icon:"https://gp.qq.com/favicon.ico"},
-    {name:"Bilibili",tag:"国内",url:"https://www.bilibili.com/favicon.ico",icon:"https://www.bilibili.com/favicon.ico"},
-    {name:"王者荣耀",tag:"国内",url:"https://pvp.qq.com/favicon.ico",icon:"https://pvp.qq.com/favicon.ico"},
-    {name:"淘宝",tag:"国内",url:"https://www.taobao.com/favicon.ico",icon:"https://www.taobao.com/favicon.ico"},
-    {name:"GitHub",tag:"国际",url:"https://github.com/favicon.ico",icon:"https://github.com/favicon.ico"},
-    {name:"Telegram",tag:"国际",url:"https://telegram.org/favicon.ico",icon:"https://telegram.org/favicon.ico"},
-    {name:"Cloudflare",tag:"国际",url:"https://www.cloudflare.com/favicon.ico",icon:"https://www.cloudflare.com/favicon.ico"},
-    {name:"YouTube",tag:"国际",url:"https://www.youtube.com/favicon.ico",icon:"https://www.youtube.com/favicon.ico"},
-    {name:"ChatGPT",tag:"国际",url:"https://chat.openai.com/favicon.ico",icon:"https://chat.openai.com/favicon.ico"},
-    {name:"X(Twitter)",tag:"国际",url:"https://x.com/favicon.ico",icon:"https://x.com/favicon.ico"}
+    {name:"和平精英",tag:"国内",url:"https://gp.qq.com/favicon.ico"},
+    {name:"Bilibili",tag:"国内",url:"https://www.bilibili.com/favicon.ico"},
+    {name:"王者荣耀",tag:"国内",url:"https://pvp.qq.com/favicon.ico"},
+    {name:"淘宝",tag:"国内",url:"https://www.taobao.com/favicon.ico"},
+    {name:"GitHub",tag:"国际",url:"https://github.com/favicon.ico"},
+    {name:"Telegram",tag:"国际",url:"https://telegram.org/favicon.ico"},
+    {name:"Cloudflare",tag:"国际",url:"https://www.cloudflare.com/favicon.ico"},
+    {name:"YouTube",tag:"国际",url:"https://www.youtube.com/favicon.ico"},
+    {name:"ChatGPT",tag:"国际",url:"https://chat.openai.com/favicon.ico"},
+    {name:"X(Twitter)",tag:"国际",url:"https://x.com/favicon.ico"}
 ];
 
 const WINDOW_SEC = 180;
@@ -303,27 +266,13 @@ function parseIsp(name) {
     }
 })();
 
-const iconCache = {};
-function preloadIcons() {
-    siteList.forEach(site => {
-        if (!iconCache[site.icon]) {
-            const img = new Image();
-            img.src = site.icon;
-            iconCache[site.icon] = img;
-        }
-    });
-}
-
 function renderList() {
     listWrap.innerHTML = "";
     siteList.forEach((site, idx) => {
         const tagClass = site.tag === "国内" ? "tag-cn" : "tag-intl";
         listWrap.innerHTML += `
         <div class="item" data-idx="${idx}">
-            <div class="c-name">
-                <img class="icon-img" src="${site.icon}" crossorigin="anonymous" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>🌐</text></svg>';this.onerror=null;">
-                <div class="name" title="${site.name}">${site.name}</div>
-            </div>
+            <div class="name" title="${site.name}">${site.name}</div>
             <div class="c-tag"><span class="tag ${tagClass}">${site.tag}</span></div>
             <div class="c-ms"><span class="ms" data-ms>--</span></div>
             <div class="c-loss"><span class="loss" data-loss>--</span></div>
@@ -429,7 +378,7 @@ async function testLatency(index, imgUrl) {
 async function batchPingAll() {
     const tasks = siteList.map((site, i) => testLatency(i, site.url));
     await Promise.all(tasks);
-    setTimeout(batchPingAll, 800);
+    setTimeout(batchPingAll, 100);
 }
 
 addBtn.onclick = () => {
@@ -437,25 +386,14 @@ addBtn.onclick = () => {
     const u = siteUrl.value.trim();
     const t = siteTag.value;
     if (!n || !u) return;
-
-    let iconUrl;
-    try {
-        iconUrl = new URL("/favicon.ico", u).href;
-    } catch {
-        iconUrl = "";
-    }
-
     const newIdx = siteList.length;
-    siteList.push({ name: n, tag: t, url: u, icon: iconUrl });
+    siteList.push({ name: n, tag: t, url: u });
     siteSample.set(newIdx, []);
-
-    preloadIcons();
     siteName.value = "";
     siteUrl.value = "";
     renderList();
 };
 
-preloadIcons();
 renderList();
 batchPingAll();
 </script>
