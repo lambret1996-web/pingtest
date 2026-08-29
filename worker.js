@@ -3,7 +3,7 @@ export default {
     const kv = env.KV;
     const url = new URL(request.url);
 
-    // 1. 访问统计接口
+    // 1.访问统计
     if (url.pathname === "/visit") {
       const ip = request.headers.get("cf-connecting-ip") || "unknown";
       const today = new Date().toISOString().slice(0, 10);
@@ -23,13 +23,13 @@ export default {
       if (!existIp) {
         await kv.put(ipKey, "1", { expirationTtl: 86400 * 30 });
       }
-
       return Response.json({ total, today: dayCnt });
     }
 
-    // 2. 保存优质测速记录
+    // 2.保存优质测速记录
     if (url.pathname === "/save") {
-      if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
+      if (request.method !== "POST")
+        return new Response("Method not allowed", { status: 405 });
       const body = await request.json();
       const { name, testUrl, ms, loss } = body;
       const now = Date.now();
@@ -41,7 +41,7 @@ export default {
       return Response.json({ ok: true });
     }
 
-    // 3. 获取全部优质测速记录
+    // 3.列出优质记录
     if (url.pathname === "/list") {
       const list = [];
       const res = await kv.list({ prefix: "ping:" });
@@ -53,6 +53,7 @@ export default {
       return Response.json(list);
     }
 
-    return new Response("ok");
+    // 其余全部路径，返回你的网页首页
+    return env.ASSETS.fetch(request);
   }
-}
+};
