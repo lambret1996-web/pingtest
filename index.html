@@ -391,8 +391,19 @@ addBtn.onclick = () => {
     let u = siteUrl.value.trim();
     const t = siteTag.value;
     if (!n || !u) return;
-    // 自动补 https
-    if(!u.startsWith('http')) u = 'https://' + u;
+
+    try {
+        // 自动补全 https 协议
+        if (!/^https?:\/\//i.test(u)) {
+            u = 'https://' + u;
+        }
+        // 提取域名根地址，自动拼接 favicon.ico 作为测速资源
+        const urlObj = new URL(u);
+        u = `${urlObj.origin}/favicon.ico`;
+    } catch (e) {
+        // 地址格式异常时保留原输入
+    }
+
     const newIdx = siteList.length;
     siteList.push({ name: n, tag: t, url: u });
     siteSample.set(newIdx, []);
@@ -400,7 +411,6 @@ addBtn.onclick = () => {
     siteUrl.value = "";
     renderList();
 };
-
 renderList();
 batchPingAll();
 </script>
