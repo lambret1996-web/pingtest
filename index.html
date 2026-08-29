@@ -13,16 +13,20 @@
 }
 
 body {
-    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
-    padding: 12px;
+    background:
+        radial-gradient(circle at 12% 12%, rgba(126, 77, 255, 0.45), transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.45), transparent 28%),
+        linear-gradient(135deg, #0f172a 0%, #020617 45%, #0f172a 100%);
     min-height: 100vh;
+    padding: 12px;
+    color: #e2e8f0;
 }
 
 .page-title {
     text-align: center;
-    font-size: 27px;
+    font-size: 28px;
     font-weight: 800;
-    background: linear-gradient(90deg, #3182ce, #805ad5);
+    background: linear-gradient(90deg, #a78bfa, #38bdf8);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -31,40 +35,50 @@ body {
 }
 
 .card {
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 16px;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 22px;
+    padding: 18px;
     max-width: 100%;
     margin: 0 auto;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 0 35px rgba(126, 77, 255, 0.22),
+        0 0 55px rgba(56, 189, 248, 0.12);
+    backdrop-filter: blur(18px);
 }
 
 .ip-bar {
     font-size: 13px;
     margin-bottom: 14px;
-    color: #4a5568;
+    color: #94a3b8;
     line-height: 1.6;
     word-break: break-all;
-    background: #f7fafc;
-    border-radius: 12px;
-    padding: 10px 12px;
+    background: rgba(30, 64, 175, 0.22);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 14px;
+    padding: 12px;
 }
 
 .add-row {
     display: flex;
-    gap: 7px;
+    gap: 8px;
     flex-wrap: nowrap;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     align-items: center;
 }
 
 input {
-    padding: 9px 12px;
+    padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid #cbd5e0;
+    border: 1px solid rgba(99, 102, 241, 0.35);
     font-size: 15px;
-    background: #f7fafc;
-    color: #2d3748;
+    background: rgba(30, 64, 175, 0.18);
+    color: #e2e8f0;
+    outline: none;
+}
+
+input::placeholder {
+    color: #64748b;
 }
 
 #siteName {
@@ -78,77 +92,53 @@ input {
 }
 
 select {
-    padding: 9px 10px;
+    padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid #cbd5e0;
+    border: 1px solid rgba(99, 102, 241, 0.35);
     font-size: 15px;
     flex-shrink: 0;
-    background: #f7fafc;
-    color: #2d3748;
+    background: rgba(30, 64, 175, 0.18);
+    color: #e2e8f0;
+    outline: none;
 }
 
 button {
-    padding: 9px 14px;
+    padding: 10px 16px;
     border-radius: 10px;
     border: none;
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     color: white;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
-    box-shadow: 0 3px 10px rgba(66, 153, 225, 0.28);
+    box-shadow: 0 0 18px rgba(99, 102, 241, 0.45);
 }
 
 button:active {
     transform: scale(0.96);
 }
 
-.table-header {
-    display: flex;
+.table-header,
+.item {
+    display: grid;
+    grid-template-columns: 140px 70px 70px 1fr;
+    align-items: center;
     width: 100%;
+    gap: 10px;
+}
+
+.table-header {
     padding: 8px 4px 12px 4px;
-    font-size: 16px;
-    color: #718096;
+    font-size: 15px;
+    color: #94a3b8;
     font-weight: 700;
-    gap: 8px;
-}
-
-.h-name {
-    flex: 2.2;
-}
-
-.h-tag {
-    width: 72px;
-    text-align: center;
-    flex-shrink: 0;
-}
-
-.h-ms {
-    width: 76px;
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.h-loss {
-    width: 76px;
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.h-dot {
-    flex: 1;
-    min-width: 72px;
 }
 
 .item {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 8px;
     padding: 14px 4px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .item:last-child {
@@ -156,10 +146,9 @@ button:active {
 }
 
 .c-name {
-    flex: 2.2;
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -172,105 +161,69 @@ button:active {
 }
 
 .name {
+    flex: 1;
     min-width: 0;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #2d3748;
+    color: #e2e8f0;
 }
 
+.h-tag,
 .c-tag {
-    width: 72px;
     text-align: center;
-    flex-shrink: 0;
 }
 
 .tag {
     display: inline-block;
-    padding: 3px 6px;
+    padding: 3px 8px;
     border-radius: 999px;
     font-size: 12px;
-    font-weight: 500;
-}
-
-.tag-cn {
-    background: #ebf8ff;
-    color: #2b6cb0;
-}
-
-.tag-intl {
-    background: #f0fff4;
-    color: #2f855a;
-}
-
-.c-ms {
-    width: 76px;
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.ms {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.c-loss {
-    width: 76px;
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.loss {
-    font-size: 17px;
     font-weight: 600;
 }
 
-.c-dot {
-    flex: 1;
-    min-width: 72px;
+.tag-cn {
+    background: rgba(56, 189, 248, 0.18);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.35);
 }
 
-.dot-group {
-    display: flex;
-    gap: 2px;
+.tag-intl {
+    background: rgba(167, 139, 250, 0.18);
+    color: #a78bfa;
+    border: 1px solid rgba(167, 139, 250, 0.35);
 }
 
-.dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    flex-shrink: 0;
+.h-ms,
+.c-ms {
+    text-align: right;
 }
 
-.green {
-    background-color: #48bb78;
+.ms {
+    font-size: 16px;
+    font-weight: 700;
 }
 
-.yellow {
-    background-color: #ecc94b;
+.h-loss,
+.c-loss {
+    text-align: right;
 }
 
-.red {
-    background-color: #f56565;
+.loss {
+    font-size: 16px;
+    font-weight: 600;
 }
 
-@media (max-width: 380px) {
-    .h-tag,
-    .c-tag {
-        width: 62px;
+@media (max-width: 360px) {
+    .table-header,
+    .item {
+        grid-template-columns: 110px 60px 60px 1fr;
     }
 
-    .h-ms,
-    .c-ms {
-        width: 66px;
-    }
-
-    .h-loss,
-    .c-loss {
-        width: 66px;
+    .name {
+        font-size: 15px;
     }
 }
 </style>
@@ -295,8 +248,7 @@ button:active {
         <div class="h-name">网站</div>
         <div class="h-tag">类别</div>
         <div class="h-ms">ping</div>
-        <div class="h-loss">   丢包率</div>
-        <div class="h-dot"></div>
+        <div class="h-loss">丢包率</div>
     </div>
 
     <div id="listWrap"></div>
@@ -375,12 +327,6 @@ function renderList() {
             <div class="c-tag"><span class="tag ${tagClass}">${site.tag}</span></div>
             <div class="c-ms"><span class="ms" data-ms>--</span></div>
             <div class="c-loss"><span class="loss" data-loss>--</span></div>
-            <div class="c-dot">
-                <div class="dot-group" data-dot>
-                    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                </div>
-            </div>
         </div>`;
     });
 }
@@ -414,7 +360,6 @@ async function testLatency(index, imgUrl) {
 
     const msDom = itemDom.querySelector("[data-ms]");
     const lossDom = itemDom.querySelector("[data-loss]");
-    const dots = itemDom.querySelectorAll(".dot");
     const nowTs = Date.now();
 
     const startTime = performance.now();
@@ -462,47 +407,29 @@ async function testLatency(index, imgUrl) {
     msDom.innerText = latency === -1 ? "-1ms" : `${latency}ms`;
     lossDom.innerText = `${lossRate}%`;
 
-    let activeDot = 0;
-    let colorClass = "red";
-
-    if (latency !== -1) {
-        if (latency < 80) {
-            colorClass = "green";
-            activeDot = 8;
-        } else if (latency <= 200) {
-            colorClass = "yellow";
-            activeDot = Math.min(8, Math.ceil(latency / 25));
-        } else {
-            colorClass = "red";
-            activeDot = Math.min(8, Math.ceil((latency - 200) / 50));
-        }
-    }
-
-    dots.forEach((d, i) => {
-        d.className = i < activeDot ? `dot ${colorClass}` : "dot";
-    });
-
     if (latency === -1) {
-        msDom.style.color = "#f56565";
+        msDom.style.color = "#f87171";
     } else if (latency < 80) {
-        msDom.style.color = "#48bb78";
+        msDom.style.color = "#4ade80";
+    } else if (latency < 200) {
+        msDom.style.color = "#fde047";
     } else {
-        msDom.style.color = "#ecc94b";
+        msDom.style.color = "#f87171";
     }
 
     if (lossRate === 0) {
-        lossDom.style.color = "#48bb78";
+        lossDom.style.color = "#4ade80";
     } else if (lossRate <= 30) {
-        lossDom.style.color = "#ecc94b";
+        lossDom.style.color = "#fde047";
     } else {
-        lossDom.style.color = "#f56565";
+        lossDom.style.color = "#f87171";
     }
 }
 
 async function batchPingAll() {
     const tasks = siteList.map((site, i) => testLatency(i, site.url));
     await Promise.all(tasks);
-    setTimeout(batchPingAll, 50);
+    setTimeout(batchPingAll, 800);
 }
 
 addBtn.onclick = () => {
