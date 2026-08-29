@@ -383,9 +383,11 @@ async function batchPingAll() {
 
 addBtn.onclick = () => {
     const n = siteName.value.trim();
-    const u = siteUrl.value.trim();
+    let u = siteUrl.value.trim();
     const t = siteTag.value;
     if (!n || !u) return;
+    // 自动补 https
+    if(!u.startsWith('http')) u = 'https://' + u;
     const newIdx = siteList.length;
     siteList.push({ name: n, tag: t, url: u });
     siteSample.set(newIdx, []);
