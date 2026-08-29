@@ -124,7 +124,7 @@ button:active {
 .table-header,
 .item {
     display: grid;
-    grid-template-columns:1.7fr 1.3fr 1.1fr 1.1fr;
+    grid-template-columns:1.5fr 1.3fr 1.1fr 1.1fr;
     align-items: center;
     width: 100%;
     gap: 8px;
@@ -374,11 +374,11 @@ async function testLatency(index, imgUrl) {
         lossDom.style.color = "#f87171";
     }
 }
-
+//刷新时间ping
 async function batchPingAll() {
     const tasks = siteList.map((site, i) => testLatency(i, site.url));
     await Promise.all(tasks);
-    setTimeout(batchPingAll, 100);
+    setTimeout(batchPingAll, 30);
 }
 
 addBtn.onclick = () => {
