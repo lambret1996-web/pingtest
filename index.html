@@ -11,7 +11,6 @@
     box-sizing: border-box;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-
 body {
     background:
         radial-gradient(circle at 12% 12%, rgba(126, 77, 255, 0.45), transparent 28%),
@@ -21,7 +20,6 @@ body {
     padding: 12px;
     color: #e2e8f0;
 }
-
 .page-title {
     text-align: center;
     font-size: 28px;
@@ -33,7 +31,6 @@ body {
     margin-bottom: 18px;
     letter-spacing: 1px;
 }
-
 .card {
     background: rgba(15, 23, 42, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.12);
@@ -46,7 +43,6 @@ body {
         0 0 55px rgba(56, 189, 248, 0.12);
     backdrop-filter: blur(18px);
 }
-
 .ip-bar {
     font-size: 13px;
     margin-bottom: 14px;
@@ -58,7 +54,6 @@ body {
     border-radius: 14px;
     padding: 12px;
 }
-
 .add-row {
     display: flex;
     gap: 8px;
@@ -66,7 +61,6 @@ body {
     margin-bottom: 14px;
     align-items: center;
 }
-
 input {
     padding: 10px 12px;
     border-radius: 10px;
@@ -76,21 +70,17 @@ input {
     color: #e2e8f0;
     outline: none;
 }
-
 input::placeholder {
     color: #64748b;
 }
-
 #siteName {
     width: 96px;
     flex-shrink: 0;
 }
-
 #siteUrl {
     flex: 1;
     min-width: 0;
 }
-
 select {
     padding: 10px 12px;
     border-radius: 10px;
@@ -101,7 +91,6 @@ select {
     color: #e2e8f0;
     outline: none;
 }
-
 button {
     padding: 10px 16px;
     border-radius: 10px;
@@ -115,52 +104,51 @@ button {
     flex-shrink: 0;
     box-shadow: 0 0 18px rgba(99, 102, 241, 0.45);
 }
-
 button:active {
     transform: scale(0.96);
 }
 
-/* 列宽分配：网站列加宽，其余三列收窄 */
+/* 列宽分配 */
 .table-header,
 .item {
     display: grid;
-    grid-template-columns:1.4fr 1.3fr 1.1fr 1.1fr;
+    grid-template-columns: 1.9fr 1.1fr 1.1fr 1.1fr;
     align-items: center;
     width: 100%;
     gap: 8px;
 }
-
 .table-header {
     padding: 8px 4px 12px 4px;
     font-size: 15px;
     color: #94a3b8;
     font-weight: 700;
 }
-
 .item {
     padding: 14px 4px;
     border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
-
 .item:last-child {
     border-bottom: none;
 }
 
-/* 删除图标，网站名称左对齐，完整显示名称，不再截断 */
+/* 网站名称（可点击跳转） */
 .name {
     font-size: 16px;
-     text-align: center;
+    padding-left: 8px;
     font-weight: 600;
     color: #e2e8f0;
     white-space: normal;
     word-break: break-all;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+.name:hover {
+    color: #a78bfa;
 }
 
 /* 表头与单元格对齐 */
-.h-name {
-   text-align: center;
-  padding-left: 8px;
-    }
+.h-name { text-align: left; padding-left: 8px; }
 .h-tag, .h-ms, .h-loss { text-align: center; }
 .c-tag, .c-ms, .c-loss { text-align: center; }
 
@@ -171,24 +159,20 @@ button:active {
     font-size: 12px;
     font-weight: 600;
 }
-
 .tag-cn {
     background: rgba(56, 189, 248, 0.18);
     color: #38bdf8;
     border: 1px solid rgba(56, 189, 248, 0.35);
 }
-
-.tag-intl {
+.tag-int {
     background: rgba(167, 139, 250, 0.18);
     color: #a78bfa;
     border: 1px solid rgba(167, 139, 250, 0.35);
 }
-
 .ms {
     font-size: 16px;
     font-weight: 700;
 }
-
 .loss {
     font-size: 16px;
     font-weight: 600;
@@ -199,46 +183,43 @@ button:active {
 <div class="page-title">网页延迟测试工具</div>
 <div class="card">
     <div class="ip-bar">
-        IP：<span id="clientIp"></span> | 位置：<span id="location"></span> | 运营商：<span id="isp"></span>
+        IP：<span id="clientIp">获取中</span> | 位置：<span id="location">获取中</span> | 运营商：<span id="isp">获取中</span>
     </div>
     <div class="add-row">
         <input id="siteName" placeholder="站点名称">
-        <input id="siteUrl" placeholder="域名">
+        <input id="siteUrl" placeholder="域名/主页地址">
         <select id="siteTag">
-            <option>国内</option>
-            <option>国际</option>
+            <option value="国内">国内</option>
+            <option value="国际">国际</option>
         </select>
         <button id="addBtn">添加</button>
     </div>
-
     <div class="table-header">
-        <div class="h-name">网站</div>
+        <div class="h-name">网 站</div>
         <div class="h-tag">类型</div>
         <div class="h-ms">ping</div>
         <div class="h-loss">丢包率</div>
     </div>
-
     <div id="listWrap"></div>
 </div>
 
 <script>
+// 站点列表：url=测速用图标地址，link=点击跳转地址
 let siteList = [
-    {name:"和平精英",tag:"国内",url:"https://gp.qq.com/favicon.ico"},
-    {name:"Bilibili",tag:"国内",url:"https://www.bilibili.com/favicon.ico"},
-    {name:"王者荣耀",tag:"国内",url:"https://pvp.qq.com/favicon.ico"},
-    {name:"淘宝",tag:"国内",url:"https://www.taobao.com/favicon.ico"},
-    {name:"GitHub",tag:"国际",url:"https://github.com/favicon.ico"},
-    {name:"Telegram",tag:"国际",url:"https://telegram.org/favicon.ico"},
-    {name:"Cloudflare",tag:"国际",url:"https://www.cloudflare.com/favicon.ico"},
-    {name:"YouTube",tag:"国际",url:"https://www.youtube.com/favicon.ico"},
-    {name:"ChatGPT",tag:"国际",url:"https://chat.openai.com/favicon.ico"},
-    {name:"X(Twitter)",tag:"国际",url:"https://x.com/favicon.ico"}
+    {name:"和平精英", tag:"国内", url:"https://gp.qq.com/favicon.ico", link:"https://www.baidu.com"},
+    {name:"Bilibili", tag:"国内", url:"https://www.bilibili.com/favicon.ico", link:"https://www.bilibili.com"},
+    {name:"王者荣耀", tag:"国内", url:"https://pvp.qq.com/favicon.ico", link:"https://pvp.qq.com"},
+    {name:"淘宝", tag:"国内", url:"https://www.taobao.com/favicon.ico", link:"https://www.taobao.com"},
+    {name:"GitHub", tag:"国际", url:"https://github.com/favicon.ico", link:"https://github.com"},
+    {name:"Telegram", tag:"国际", url:"https://telegram.org/favicon.ico", link:"https://telegram.org"},
+    {name:"Cloudflare", tag:"国际", url:"https://www.cloudflare.com/favicon.ico", link:"https://www.cloudflare.com"},
+    {name:"YouTube", tag:"国际", url:"https://www.youtube.com/favicon.ico", link:"https://www.youtube.com"},
+    {name:"ChatGPT", tag:"国际", url:"https://chat.openai.com/favicon.ico", link:"https://chat.openai.com"},
+    {name:"X(Twitter)", tag:"国际", url:"https://x.com/favicon.ico", link:"https://x.com"}
 ];
 
 const WINDOW_SEC = 180;
 const siteSample = new Map();
-siteList.forEach((_, idx) => siteSample.set(idx, []));
-
 const TEST_ROUND = 4;
 const listWrap = document.getElementById("listWrap");
 const siteName = document.getElementById("siteName");
@@ -246,37 +227,29 @@ const siteUrl = document.getElementById("siteUrl");
 const siteTag = document.getElementById("siteTag");
 const addBtn = document.getElementById("addBtn");
 
-function parseIsp(name) {
-    if (!name) return "未知";
-    const low = name.toLowerCase();
-    if (low.includes("mobile")) return "中国移动";
-    if (low.includes("unicom")) return "中国联通";
-    if (low.includes("telecom")) return "中国电信";
-    if (low.includes("cernet")) return "教育网";
-    return name;
-}
-
+// IP信息获取
 (async function getIpInfo() {
     try {
         const res = await fetch("https://api.ip.sb/geoip");
-        const json = await res.json();
-        document.getElementById("clientIp").innerText = json.ip;
-        document.getElementById("location").innerText = `${json.country} ${json.city || ""}`;
-        document.getElementById("isp").innerText = parseIsp(json.isp);
+        const data = await res.json();
+        document.getElementById("clientIp").textContent = data.ip;
+        document.getElementById("location").textContent = `${data.country} ${data.city || ""}`;
+        document.getElementById("isp").textContent = data.isp || "未知";
     } catch (e) {
-        document.getElementById("clientIp").innerText = "获取失败";
-        document.getElementById("location").innerText = "获取失败";
-        document.getElementById("isp").innerText = "获取失败";
+        document.getElementById("clientIp").textContent = "获取失败";
+        document.getElementById("location").textContent = "获取失败";
+        document.getElementById("isp").textContent = "获取失败";
     }
 })();
 
+// 渲染列表
 function renderList() {
     listWrap.innerHTML = "";
     siteList.forEach((site, idx) => {
-        const tagClass = site.tag === "国内" ? "tag-cn" : "tag-intl";
+        const tagClass = site.tag === "国内" ? "tag-cn" : "tag-int";
         listWrap.innerHTML += `
         <div class="item" data-idx="${idx}">
-            <div class="name" title="${site.name}">${site.name}</div>
+            <a class="name" href="${site.link}" target="_blank" rel="noopener noreferrer" title="${site.name}">${site.name}</a>
             <div class="c-tag"><span class="tag ${tagClass}">${site.tag}</span></div>
             <div class="c-ms"><span class="ms" data-ms>--</span></div>
             <div class="c-loss"><span class="loss" data-loss>--</span></div>
@@ -284,12 +257,12 @@ function renderList() {
     });
 }
 
+// 单次图片加载测速
 async function singleTest(imgUrl) {
     return new Promise(resolve => {
         const img = new Image();
-       // img.crossOrigin = "anonymous"; //增加跨域请求标记
         let ok = false;
-        let timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             img.onload = null;
             img.onerror = null;
             resolve(ok);
@@ -308,65 +281,40 @@ async function singleTest(imgUrl) {
     });
 }
 
+// 延迟测试主逻辑
 async function testLatency(index, imgUrl) {
-    const itemDom = document.querySelector(`[data-idx="${index}"]`);
-    if (!itemDom) return;
+    const item = listWrap.querySelector(`[data-idx="${index}"]`);
+    if (!item) return;
+    const msDom = item.querySelector("[data-ms]");
+    const lossDom = item.querySelector("[data-loss]");
 
-    const msDom = itemDom.querySelector("[data-ms]");
-    const lossDom = itemDom.querySelector("[data-loss]");
-    const nowTs = Date.now();
-
-    const startTime = performance.now();
+    const start = performance.now();
     let latency = -1;
-    await new Promise(resolve => {
-        const img = new Image();
-        let timer = setTimeout(() => {
-            img.onload = null;
-            img.onerror = null;
-            latency = -1;
-            resolve();
-        }, 2200);
-        img.onload = () => {
-            clearTimeout(timer);
-            latency = Math.round(performance.now() - startTime);
-            resolve();
-        };
-        img.onerror = () => {
-            clearTimeout(timer);
-            latency = -1;
-            resolve();
-        };
-        img.src = imgUrl + "?t=" + Date.now();
-    });
-
     let success = 0;
+
     for (let i = 0; i < TEST_ROUND; i++) {
         const ok = await singleTest(imgUrl);
-        success += ok ? 1 : 0;
+        if (ok) success++;
     }
 
-    const queue = siteSample.get(index);
-    for (let i = 0; i < TEST_ROUND; i++) {
-        queue.push({ ts: nowTs, ok: i < success });
+    const end = performance.now();
+    if (success > 0) {
+        latency = Math.round((end - start) / TEST_ROUND);
     }
 
-    const expire = nowTs - WINDOW_SEC * 1000;
-    siteSample.set(index, queue.filter(s => s.ts >= expire));
-    const validSamples = siteSample.get(index);
+    // 丢包率计算
+    const lossRate = Math.round((1 - success / TEST_ROUND) * 100);
 
-    const total = validSamples.length;
-    const okCount = validSamples.filter(s => s.ok).length;
-    const lossRate = total === 0 ? 0 : Math.round((1 - okCount / total) * 100);
+    msDom.textContent = latency === -1 ? "-1ms" : latency + "ms";
+    lossDom.textContent = lossRate + "%";
 
-    msDom.innerText = latency === -1 ? "-1ms" : `${latency}ms`;
-    lossDom.innerText = `${lossRate}%`;
-
+    // 颜色状态
     if (latency === -1) {
         msDom.style.color = "#f87171";
     } else if (latency < 80) {
         msDom.style.color = "#4ade80";
     } else if (latency < 200) {
-        msDom.style.color = "#fde047";
+        msDom.style.color = "#facc15";
     } else {
         msDom.style.color = "#f87171";
     }
@@ -374,43 +322,52 @@ async function testLatency(index, imgUrl) {
     if (lossRate === 0) {
         lossDom.style.color = "#4ade80";
     } else if (lossRate <= 30) {
-        lossDom.style.color = "#fde047";
+        lossDom.style.color = "#facc15";
     } else {
         lossDom.style.color = "#f87171";
     }
+
+    // 记录样本窗口
+    if (!siteSample.has(index)) siteSample.set(index, []);
+    const arr = siteSample.get(index);
+    arr.push({ time: Date.now(), success });
+    const expire = Date.now() - WINDOW_SEC * 1000;
+    while (arr.length && arr[0].time < expire) arr.shift();
 }
-//刷新时间ping
+
+// 批量循环测速
 async function batchPingAll() {
     const tasks = siteList.map((site, i) => testLatency(i, site.url));
     await Promise.all(tasks);
-    setTimeout(batchPingAll, 30);
+    setTimeout(batchPingAll, 500);
 }
 
+// 添加站点
 addBtn.onclick = () => {
     const n = siteName.value.trim();
     let u = siteUrl.value.trim();
     const t = siteTag.value;
     if (!n || !u) return;
 
+    let link = u;
     try {
-        // 自动补全 https 协议
         if (!/^https?:\/\//i.test(u)) {
-            u = 'https://' + u;
+            u = "https://" + u;
         }
-        // 提取域名根地址，自动拼接 favicon.ico 作为测速资源
         const urlObj = new URL(u);
-        u = `${urlObj.origin}/favicon.ico`;
-    } catch (e) {
-        // 地址格式异常时保留原输入
-    }
+        link = urlObj.origin;       // 跳转用主页
+        u = urlObj.origin + "/favicon.ico"; // 测速用图标
+    } catch (e) {}
 
     const newIdx = siteList.length;
-    siteList.push({ name: n, tag: t, url: u });
+    siteList.push({ name: n, tag: t, url: u, link: link });
     siteSample.set(newIdx, []);
     siteName.value = "";
     siteUrl.value = "";
     renderList();
 };
+
+// 初始化
 renderList();
 batchPingAll();
 </script>
