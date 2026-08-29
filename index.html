@@ -44,9 +44,10 @@ body {
     backdrop-filter: blur(18px);
 }
 .ip-bar {
-    font-size: 13px;
+    font-size: 15px;
     margin-bottom: 14px;
-    color: #94a3b8;
+    background: linear-gradient(90deg, #ffffff, #4ade80);
+    color: transparent;
     line-height: 1.6;
     word-break: break-all;
     background: rgba(30, 64, 175, 0.22);
@@ -196,7 +197,9 @@ button:active {
 <div class="page-title">网页延迟测试工具</div>
 <div class="card">
     <div class="ip-bar">
-    IP：<span id="clientIp">获取中</span> | 位置：<span id="location">获取中</span> | 运营商：<span id="isp">获取中</span>
+    IP：<span id="clientIp">获取中</span>  | ISP运营商：<span id="isp">获取中</span>
+   | 位置：<span id="location">获取中</span>
+      
     <div class="time-line">当前北京时间：<span id="nowTime">--</span></div>
 </div>
     
