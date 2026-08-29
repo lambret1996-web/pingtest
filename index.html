@@ -1,3 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>延迟测速面板</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+    padding: 12px;
+    min-height: 100vh;
+}
+
+.page-title {
+    text-align: center;
+    font-size: 27px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #3182ce, #805ad5);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 16px;
+    max-width: 100%;
+    margin: 0 auto;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.ip-bar {
+    font-size: 13px;
+    margin-bottom: 14px;
+    color: #4a5568;
+    line-height: 1.6;
+    word-break: break-all;
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.add-row {
+    display: flex;
+    gap: 7px;
+    flex-wrap: nowrap;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+input {
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e0;
+    font-size: 15px;
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+#siteName {
+    width: 96px;
+    flex-shrink: 0;
+}
+
+#siteUrl {
+    flex: 1;
+    min-width: 0;
+}
+
+select {
+    padding: 9px 10px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e0;
+    font-size: 15px;
+    flex-shrink: 0;
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+button {
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 3px 10px rgba(66, 153, 225, 0.28);
+}
+
+button:active {
+    transform: scale(0.96);
+}
+
+.table-header {
+    display: flex;
+    width: 100%;
+    padding: 8px 4px 12px 4px;
+    font-size: 16px;
+    color: #718096;
+    font-weight: 700;
+    gap: 8px;
+}
+
+.h-name {
+    flex: 2.2;
+}
+
+.h-tag {
+    width: 72px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.h-ms {
+    width: 76px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.h-loss {
+    width: 76px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.h-dot {
+    flex: 1;
+    min-width: 72px;
+}
+
+.item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 4px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.item:last-child {
+    border-bottom: none;
+}
+
+.c-name {
+    flex: 2.2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.icon-img {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.name {
+    min-width: 0;
+    font-size: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #2d3748;
+}
+
+.c-tag {
+    width: 72px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.tag {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tag-cn {
+    background: #ebf8ff;
+    color: #2b6cb0;
+}
+
+.tag-intl {
+    background: #f0fff4;
+    color: #2f855a;
+}
+
+.c-ms {
+    width: 76px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.ms {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.c-loss {
+    width: 76px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.loss {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.c-dot {
+    flex: 1;
+    min-width: 72px;
+}
+
+.dot-group {
+    display: flex;
+    gap: 2px;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.green {
+    background-color: #48bb78;
+}
+
+.yellow {
+    background-color: #ecc94b;
+}
+
+.red {
+    background-color: #f56565;
+}
+
+@media (max-width: 380px) {
+    .h-tag,
+    .c-tag {
+        width: 62px;
+    }
+
+    .h-ms,
+    .c-ms {
+        width: 66px;
+    }
+
+    .h-loss,
+    .c-loss {
+        width: 66px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="page-title">网页延迟测试工具</div>
+<div class="card">
+    <div class="ip-bar">
+        IP：<span id="clientIp"></span> | 位置：<span id="location"></span> | 运营商：<span id="isp"></span>
+    </div>
+    <div class="add-row">
+        <input id="siteName" placeholder="站点名称">
+        <input id="siteUrl" placeholder="域名">
+        <select id="siteTag">
+            <option>国内</option>
+            <option>国际</option>
+        </select>
+        <button id="addBtn">添加</button>
+    </div>
+
+    <div class="table-header">
+        <div class="h-name">网站</div>
+        <div class="h-tag">类别</div>
+        <div class="h-ms">ping</div>
+        <div class="h-loss">   丢包率</div>
+        <div class="h-dot"></div>
+    </div>
+
+    <div id="listWrap"></div>
+</div>
+
 <script>
 let siteList = [
     {name:"和平精英",tag:"国内",url:"https://gp.qq.com/favicon.ico",icon:"https://gp.qq.com/favicon.ico"},
@@ -12,10 +316,9 @@ let siteList = [
     {name:"X(Twitter)",tag:"国际",url:"https://x.com/favicon.ico",icon:"https://x.com/favicon.ico"}
 ];
 
-// 新增：每个站点保存样本队列，滚动窗口 60秒
-const WINDOW_SEC = 60;
+const WINDOW_SEC = 180;
 const siteSample = new Map();
-siteList.forEach((_, idx)=> siteSample.set(idx, []));
+siteList.forEach((_, idx) => siteSample.set(idx, []));
 
 const TEST_ROUND = 4;
 const listWrap = document.getElementById("listWrap");
@@ -23,178 +326,202 @@ const siteName = document.getElementById("siteName");
 const siteUrl = document.getElementById("siteUrl");
 const siteTag = document.getElementById("siteTag");
 const addBtn = document.getElementById("addBtn");
-const clientIpEl = document.getElementById("clientIp");
-const locationEl = document.getElementById("location");
-const ispEl = document.getElementById("isp");
 
-function parseIsp(name){
-    if(!name) return "未知";
+function parseIsp(name) {
+    if (!name) return "未知";
     const low = name.toLowerCase();
-    if(low.includes("mobile")) return "中国移动";
-    if(low.includes("unicom")) return "中国联通";
-    if(low.includes("telecom")) return "中国电信";
-    if(low.includes("cernet")) return "教育网";
+    if (low.includes("mobile")) return "中国移动";
+    if (low.includes("unicom")) return "中国联通";
+    if (low.includes("telecom")) return "中国电信";
+    if (low.includes("cernet")) return "教育网";
     return name;
 }
 
-(async function getIpInfo(){
-  try{
-    const res = await fetch("https://api.ip.sb/geoip");
-    const json = await res.json();
-    clientIpEl.innerText = json.ip;
-    locationEl.innerText = `${json.country} ${json.city||""}`;
-    ispEl.innerText = parseIsp(json.isp);
-  }catch(e){
-    clientIpEl.innerText = "获取失败";
-    locationEl.innerText = "获取失败";
-    ispEl.innerText = "获取失败";
-  }
+(async function getIpInfo() {
+    try {
+        const res = await fetch("https://api.ip.sb/geoip");
+        const json = await res.json();
+        document.getElementById("clientIp").innerText = json.ip;
+        document.getElementById("location").innerText = `${json.country} ${json.city || ""}`;
+        document.getElementById("isp").innerText = parseIsp(json.isp);
+    } catch (e) {
+        document.getElementById("clientIp").innerText = "获取失败";
+        document.getElementById("location").innerText = "获取失败";
+        document.getElementById("isp").innerText = "获取失败";
+    }
 })();
 
 const iconCache = {};
-function preloadIcons(){
-    siteList.forEach(site=>{
-        if(!iconCache[site.icon]){
+function preloadIcons() {
+    siteList.forEach(site => {
+        if (!iconCache[site.icon]) {
             const img = new Image();
             img.src = site.icon;
             iconCache[site.icon] = img;
         }
-    })
+    });
 }
 
-function renderList(){
+function renderList() {
     listWrap.innerHTML = "";
-    siteList.forEach((site,idx)=>{
-        const tagClass = site.tag === "国内" ? "tag-cn":"tag-intl";
+    siteList.forEach((site, idx) => {
+        const tagClass = site.tag === "国内" ? "tag-cn" : "tag-intl";
         listWrap.innerHTML += `
         <div class="item" data-idx="${idx}">
-            <img class="icon-img" src="${site.icon}" crossorigin="anonymous" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>🌐</text></svg>';this.onerror=null;">
-            <div class="name" title="${site.name}">${site.name}</div>
-            <div class="tag ${tagClass}">${site.tag}</div>
-            <div class="ms" data-ms>--</div>
-            <div class="loss" data-loss>--</div>
-            <div class="dot-group" data-dot>
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="c-name">
+                <img class="icon-img" src="${site.icon}" crossorigin="anonymous" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>🌐</text></svg>';this.onerror=null;">
+                <div class="name" title="${site.name}">${site.name}</div>
+            </div>
+            <div class="c-tag"><span class="tag ${tagClass}">${site.tag}</span></div>
+            <div class="c-ms"><span class="ms" data-ms>--</span></div>
+            <div class="c-loss"><span class="loss" data-loss>--</span></div>
+            <div class="c-dot">
+                <div class="dot-group" data-dot>
+                    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                </div>
             </div>
         </div>`;
     });
 }
 
-async function singleTest(imgUrl){
-    return new Promise(resolve=>{
+async function singleTest(imgUrl) {
+    return new Promise(resolve => {
         const img = new Image();
         let ok = false;
-        let timer = setTimeout(()=>{
-            img.onload=null;img.onerror=null;
+        let timer = setTimeout(() => {
+            img.onload = null;
+            img.onerror = null;
             resolve(ok);
-        },2200);
-        img.onload = ()=>{
-            clearTimeout(timer); ok=true; resolve(ok);
+        }, 2200);
+        img.onload = () => {
+            clearTimeout(timer);
+            ok = true;
+            resolve(ok);
         };
-        img.onerror = ()=>{
-            clearTimeout(timer); ok=false; resolve(ok);
+        img.onerror = () => {
+            clearTimeout(timer);
+            ok = false;
+            resolve(ok);
         };
-        img.src = imgUrl+"?t="+Date.now()+"_"+Math.random();
-    })
+        img.src = imgUrl + "?t=" + Date.now() + "_" + Math.random();
+    });
 }
 
-async function testLatency(index,imgUrl){
+async function testLatency(index, imgUrl) {
     const itemDom = document.querySelector(`[data-idx="${index}"]`);
-    if(!itemDom) return;
+    if (!itemDom) return;
+
     const msDom = itemDom.querySelector("[data-ms]");
     const lossDom = itemDom.querySelector("[data-loss]");
     const dots = itemDom.querySelectorAll(".dot");
     const nowTs = Date.now();
 
-    //第一次请求测延迟
     const startTime = performance.now();
     let latency = -1;
-    await new Promise(resolve=>{
+    await new Promise(resolve => {
         const img = new Image();
-        let timer = setTimeout(()=>{img.onload=null;img.onerror=null;latency=-1;resolve()},2200);
-        img.onload = ()=>{clearTimeout(timer);latency=Math.round(performance.now()-startTime);resolve();};
-        img.onerror = ()=>{clearTimeout(timer);latency=-1;resolve();};
-        img.src = imgUrl+"?t="+Date.now();
-    })
+        let timer = setTimeout(() => {
+            img.onload = null;
+            img.onerror = null;
+            latency = -1;
+            resolve();
+        }, 2200);
+        img.onload = () => {
+            clearTimeout(timer);
+            latency = Math.round(performance.now() - startTime);
+            resolve();
+        };
+        img.onerror = () => {
+            clearTimeout(timer);
+            latency = -1;
+            resolve();
+        };
+        img.src = imgUrl + "?t=" + Date.now();
+    });
 
-    //本轮多次测试
     let success = 0;
-    for(let i=0;i<TEST_ROUND;i++){
+    for (let i = 0; i < TEST_ROUND; i++) {
         const ok = await singleTest(imgUrl);
         success += ok ? 1 : 0;
     }
-    const fail = TEST_ROUND - success;
 
-    // 存入滚动样本
     const queue = siteSample.get(index);
-    for(let i=0;i<TEST_ROUND;i++){
-        queue.push({ts: nowTs, ok: i < success});
+    for (let i = 0; i < TEST_ROUND; i++) {
+        queue.push({ ts: nowTs, ok: i < success });
     }
-    // 清理超过60秒过期样本
+
     const expire = nowTs - WINDOW_SEC * 1000;
-    siteSample.set(index, queue.filter(s=> s.ts >= expire));
+    siteSample.set(index, queue.filter(s => s.ts >= expire));
     const validSamples = siteSample.get(index);
 
-    // 统计一分钟窗口丢包率
     const total = validSamples.length;
-    const okCount = validSamples.filter(s=>s.ok).length;
+    const okCount = validSamples.filter(s => s.ok).length;
     const lossRate = total === 0 ? 0 : Math.round((1 - okCount / total) * 100);
 
-    //渲染
     msDom.innerText = latency === -1 ? "-1ms" : `${latency}ms`;
     lossDom.innerText = `${lossRate}%`;
 
     let activeDot = 0;
     let colorClass = "red";
-    if(latency !== -1){
-        if(latency < 80){
+
+    if (latency !== -1) {
+        if (latency < 80) {
             colorClass = "green";
             activeDot = 8;
-        }else if(latency <= 200){
+        } else if (latency <= 200) {
             colorClass = "yellow";
             activeDot = Math.min(8, Math.ceil(latency / 25));
-        }else{
+        } else {
             colorClass = "red";
             activeDot = Math.min(8, Math.ceil((latency - 200) / 50));
         }
     }
-    dots.forEach((d,i)=>{
+
+    dots.forEach((d, i) => {
         d.className = i < activeDot ? `dot ${colorClass}` : "dot";
     });
 
-    if(latency === -1){
+    if (latency === -1) {
         msDom.style.color = "#f56565";
-    }else if(latency < 80){
+    } else if (latency < 80) {
         msDom.style.color = "#48bb78";
-    }else{
+    } else {
         msDom.style.color = "#ecc94b";
     }
-    //丢包颜色
-    if(lossRate === 0){
-        lossDom.style.color="#48bb78";
-    }else if(lossRate <=30){
-        lossDom.style.color="#ecc94b";
-    }else{
-        lossDom.style.color="#f56565";
+
+    if (lossRate === 0) {
+        lossDom.style.color = "#48bb78";
+    } else if (lossRate <= 30) {
+        lossDom.style.color = "#ecc94b";
+    } else {
+        lossDom.style.color = "#f56565";
     }
 }
 
-async function batchPingAll(){
-    const tasks = siteList.map((site,i)=> testLatency(i, site.url));
+async function batchPingAll() {
+    const tasks = siteList.map((site, i) => testLatency(i, site.url));
     await Promise.all(tasks);
-    setTimeout(batchPingAll, 800);
+    setTimeout(batchPingAll, 50);
 }
 
-addBtn.onclick = ()=>{
+addBtn.onclick = () => {
     const n = siteName.value.trim();
     const u = siteUrl.value.trim();
     const t = siteTag.value;
-    if(!n || !u) return;
-    const iconUrl = new URL("/favicon.ico",u).href;
+    if (!n || !u) return;
+
+    let iconUrl;
+    try {
+        iconUrl = new URL("/favicon.ico", u).href;
+    } catch {
+        iconUrl = "";
+    }
+
     const newIdx = siteList.length;
-    siteList.push({name:n, tag:t, url:u, icon:iconUrl});
+    siteList.push({ name: n, tag: t, url: u, icon: iconUrl });
     siteSample.set(newIdx, []);
+
     preloadIcons();
     siteName.value = "";
     siteUrl.value = "";
@@ -205,3 +532,5 @@ preloadIcons();
 renderList();
 batchPingAll();
 </script>
+</body>
+</html>
