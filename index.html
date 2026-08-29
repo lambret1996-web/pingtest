@@ -200,11 +200,28 @@ button:active {
     font-size: 16px;
     font-weight: 600;
 }
+    .stat-line{
+  margin-top:8px;
+  font-size:13px;
+  background: linear-gradient(90deg, #ffffff, #4ade80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+        
+    }
+           /*HTML页面设置 */ 
+
+    
 </style>
    
 </head>
 <body>
-<div class="page-title">Ping全自动延迟测试</div>
+
+ <div class="stat-line">
+总访问：<span id="totalVisit">--</span>｜今日访问：<span id="todayVisit">--</span>
+</div>
+
+    <div class="page-title">Ping全自动延迟测试</div>
 <div class="card">
     <div class="ip-bar">
     <div>你当前的IP：<span id="clientIp">获取中</span></div>
