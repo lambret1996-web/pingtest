@@ -181,3 +181,10 @@ button:active {
 .green { background-color: #48bb78; }
 .yellow { background-color: #ecc94b; }
 .red { background-color: #f56565; }
+.loss {
+    width: 52px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+    flex-shrink: 0;
+}
