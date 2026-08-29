@@ -6,7 +6,7 @@
 }
 
 body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #eef2ff 100%);
+    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
     padding: 12px;
     min-height: 100vh;
 }
@@ -14,7 +14,7 @@ body {
     text-align:center;
     font-size:24px;
     font-weight:800;
-    background: linear-gradient(90deg,#2563eb,#7c3aed);
+    background: linear-gradient(90deg,#3182ce,#805ad5);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -27,22 +27,22 @@ body {
     padding: 16px;
     max-width: 100%;
     margin: 0 auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .ip-bar {
     font-size: 13px;
     margin-bottom: 14px;
-    color: #666;
+    color: #4a5568;
     line-height: 1.6;
     word-break: break-all;
-    background: #f8fafc;
+    background: #f7fafc;
     border-radius: 12px;
     padding: 10px 12px;
 }
 
 .ip-bar strong {
-    color: #334155;
+    color: #2d3748;
     font-weight: 600;
 }
 
@@ -57,10 +57,10 @@ body {
 input {
     padding: 9px 12px;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #cbd5e0;
     font-size: 14px;
-    background: #fafafa;
-    color: #334155;
+    background: #f7fafc;
+    color: #2d3748;
 }
 
 #siteName {
@@ -76,25 +76,25 @@ input {
 select {
     padding: 9px 10px;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #cbd5e0;
     font-size: 13px;
     flex-shrink: 0;
-    background: #fafafa;
-    color: #334155;
+    background: #f7fafc;
+    color: #2d3748;
 }
 
 button {
     padding: 9px 14px;
     border-radius: 10px;
     border: none;
-    background: linear-gradient(135deg, #4070f4 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
     color: white;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(64, 112, 244, 0.35);
+    box-shadow: 0 3px 10px rgba(66, 153, 225, 0.28);
 }
 
 button:active {
@@ -106,7 +106,7 @@ button:active {
     align-items: center;
     gap: 9px;
     padding: 11px 4px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
     flex-wrap: nowrap;
 }
 
@@ -131,7 +131,7 @@ button:active {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #334155;
+    color: #2d3748;
 }
 
 .tag {
@@ -145,13 +145,13 @@ button:active {
 }
 
 .tag-cn {
-    background: #e6ecff;
-    color: #3b59b3;
+    background: #ebf8ff;
+    color: #2b6cb0;
 }
 
 .tag-intl {
-    background: #e2f4ed;
-    color: #278c6c;
+    background: #f0fff4;
+    color: #2f855a;
 }
 
 .ms {
@@ -178,6 +178,6 @@ button:active {
     flex-shrink: 0;
 }
 
-.green { background-color: #22c55e; }
-.yellow { background-color: #f59e0b; }
-.red { background-color: #ef4444; }
+.green { background-color: #48bb78; }
+.yellow { background-color: #ecc94b; }
+.red { background-color: #f56565; }
