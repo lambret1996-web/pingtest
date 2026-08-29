@@ -1,33 +1,3 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1,user-scalable=no">
-    <title>延迟测速面板</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="page-title">网页延迟测试工具</div>
-<div class="card" id="mainCard">
-    <div class="ip-bar">
-        IP：<span id="clientIp"><strong>加载中...</strong></span>
-        &nbsp;|&nbsp;位置：<span id="location"><strong>加载中...</strong></span>
-        &nbsp;|&nbsp;运营商：<span id="isp"><strong>加载中...</strong></span>
-    </div>
-
-    <div class="add-row">
-        <input id="siteName" placeholder="站点名称"/>
-        <input id="siteUrl" placeholder="域名"/>
-        <select id="siteTag">
-            <option value="国内">国内</option>
-            <option value="国际">国际</option>
-        </select>
-        <button id="addBtn">添加</button>
-    </div>
-
-    <div id="listWrap"></div>
-</div>
-
 <script>
 let siteList = [
     {name:"和平精英",tag:"国内",url:"https://gp.qq.com/favicon.ico",icon:"https://gp.qq.com/favicon.ico"},
@@ -42,7 +12,12 @@ let siteList = [
     {name:"X(Twitter)",tag:"国际",url:"https://x.com/favicon.ico",icon:"https://x.com/favicon.ico"}
 ];
 
-const TEST_ROUND = 4; //每个站点连续测试4次，用来计算模拟丢包率
+// 新增：每个站点保存样本队列，滚动窗口 60秒
+const WINDOW_SEC = 60;
+const siteSample = new Map();
+siteList.forEach((_, idx)=> siteSample.set(idx, []));
+
+const TEST_ROUND = 4;
 const listWrap = document.getElementById("listWrap");
 const siteName = document.getElementById("siteName");
 const siteUrl = document.getElementById("siteUrl");
@@ -130,6 +105,7 @@ async function testLatency(index,imgUrl){
     const msDom = itemDom.querySelector("[data-ms]");
     const lossDom = itemDom.querySelector("[data-loss]");
     const dots = itemDom.querySelectorAll(".dot");
+    const nowTs = Date.now();
 
     //第一次请求测延迟
     const startTime = performance.now();
@@ -142,12 +118,28 @@ async function testLatency(index,imgUrl){
         img.src = imgUrl+"?t="+Date.now();
     })
 
-    //多次请求统计成功率，模拟丢包
+    //本轮多次测试
     let success = 0;
     for(let i=0;i<TEST_ROUND;i++){
-        if(await singleTest(imgUrl)) success++;
+        const ok = await singleTest(imgUrl);
+        success += ok ? 1 : 0;
     }
-    const lossRate =  Math.round( (1 - success / TEST_ROUND) * 100 );
+    const fail = TEST_ROUND - success;
+
+    // 存入滚动样本
+    const queue = siteSample.get(index);
+    for(let i=0;i<TEST_ROUND;i++){
+        queue.push({ts: nowTs, ok: i < success});
+    }
+    // 清理超过60秒过期样本
+    const expire = nowTs - WINDOW_SEC * 1000;
+    siteSample.set(index, queue.filter(s=> s.ts >= expire));
+    const validSamples = siteSample.get(index);
+
+    // 统计一分钟窗口丢包率
+    const total = validSamples.length;
+    const okCount = validSamples.filter(s=>s.ok).length;
+    const lossRate = total === 0 ? 0 : Math.round((1 - okCount / total) * 100);
 
     //渲染
     msDom.innerText = latency === -1 ? "-1ms" : `${latency}ms`;
@@ -200,7 +192,9 @@ addBtn.onclick = ()=>{
     const t = siteTag.value;
     if(!n || !u) return;
     const iconUrl = new URL("/favicon.ico",u).href;
+    const newIdx = siteList.length;
     siteList.push({name:n, tag:t, url:u, icon:iconUrl});
+    siteSample.set(newIdx, []);
     preloadIcons();
     siteName.value = "";
     siteUrl.value = "";
@@ -211,5 +205,3 @@ preloadIcons();
 renderList();
 batchPingAll();
 </script>
-</body>
-</html>
