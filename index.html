@@ -256,8 +256,11 @@ button:active {
 总访问：<span id="totalVisit">--</span>｜今日访问：<span id="todayVisit">--</span>
     </div>
 </footer>
-<script>
-// 站点列表：url=测速用图标地址，link=点击跳转地址
+
+    
+<script>//脚本设置
+
+    // 站点列表：url=测速用图标地址，link=点击跳转地址
 let siteList = [
     {name:"和平精英", tag:"国内", url:"https://gp.qq.com/favicon.ico", link:"https://gp.qq.com"},
   
@@ -277,7 +280,7 @@ let siteList = [
     {name:"ChatGPT", tag:"国际", url:"https://chat.openai.com/favicon.ico", link:"https://chat.openai.com"},
     {name:"X(Twitter)", tag:"国际", url:"https://x.com/favicon.ico", link:"https://x.com"}
 ];
-<script>
+
 // 同域名直接用相对路径即可
 const STAT_API = "/visit";
 const SAVE_API = "/save";
