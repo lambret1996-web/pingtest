@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1,user-scalable=no">
     <title>延迟测速面板</title>
-    <!--引入独立样式文件-->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -43,6 +42,7 @@ let siteList = [
     {name:"X(Twitter)",tag:"国际",url:"https://x.com/favicon.ico",icon:"https://x.com/favicon.ico"}
 ];
 
+const TEST_ROUND = 4; //每个站点连续测试4次，用来计算模拟丢包率
 const listWrap = document.getElementById("listWrap");
 const siteName = document.getElementById("siteName");
 const siteUrl = document.getElementById("siteUrl");
@@ -52,7 +52,6 @@ const clientIpEl = document.getElementById("clientIp");
 const locationEl = document.getElementById("location");
 const ispEl = document.getElementById("isp");
 
-//运营商名称简单翻译
 function parseIsp(name){
     if(!name) return "未知";
     const low = name.toLowerCase();
@@ -77,7 +76,6 @@ function parseIsp(name){
   }
 })();
 
-// 预加载全部图标，缓存到内存，避免高频重渲染反复请求图片
 const iconCache = {};
 function preloadIcons(){
     siteList.forEach(site=>{
@@ -99,6 +97,7 @@ function renderList(){
             <div class="name" title="${site.name}">${site.name}</div>
             <div class="tag ${tagClass}">${site.tag}</div>
             <div class="ms" data-ms>--</div>
+            <div class="loss" data-loss>--</div>
             <div class="dot-group" data-dot>
                 <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
                 <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
@@ -107,79 +106,92 @@ function renderList(){
     });
 }
 
+async function singleTest(imgUrl){
+    return new Promise(resolve=>{
+        const img = new Image();
+        let ok = false;
+        let timer = setTimeout(()=>{
+            img.onload=null;img.onerror=null;
+            resolve(ok);
+        },2200);
+        img.onload = ()=>{
+            clearTimeout(timer); ok=true; resolve(ok);
+        };
+        img.onerror = ()=>{
+            clearTimeout(timer); ok=false; resolve(ok);
+        };
+        img.src = imgUrl+"?t="+Date.now()+"_"+Math.random();
+    })
+}
+
 async function testLatency(index,imgUrl){
     const itemDom = document.querySelector(`[data-idx="${index}"]`);
     if(!itemDom) return;
-
     const msDom = itemDom.querySelector("[data-ms]");
+    const lossDom = itemDom.querySelector("[data-loss]");
     const dots = itemDom.querySelectorAll(".dot");
+
+    //第一次请求测延迟
     const startTime = performance.now();
-    let cost = -1;
-
-    return new Promise(resolve=>{
+    let latency = -1;
+    await new Promise(resolve=>{
         const img = new Image();
-        let timer = setTimeout(()=>{
-            img.onload=null;
-            img.onerror=null;
-            cost = -1;
-            render();
-            resolve();
-        },2500);
+        let timer = setTimeout(()=>{img.onload=null;img.onerror=null;latency=-1;resolve()},2200);
+        img.onload = ()=>{clearTimeout(timer);latency=Math.round(performance.now()-startTime);resolve();};
+        img.onerror = ()=>{clearTimeout(timer);latency=-1;resolve();};
+        img.src = imgUrl+"?t="+Date.now();
+    })
 
-        img.onload = ()=>{
-            clearTimeout(timer);
-            cost = Math.round(performance.now() - startTime);
-            render();
-            resolve();
-        };
+    //多次请求统计成功率，模拟丢包
+    let success = 0;
+    for(let i=0;i<TEST_ROUND;i++){
+        if(await singleTest(imgUrl)) success++;
+    }
+    const lossRate =  Math.round( (1 - success / TEST_ROUND) * 100 );
 
-        img.onerror = ()=>{
-            clearTimeout(timer);
-            cost = -1;
-            render();
-            resolve();
-        };
+    //渲染
+    msDom.innerText = latency === -1 ? "-1ms" : `${latency}ms`;
+    lossDom.innerText = `${lossRate}%`;
 
-        img.src = imgUrl + "?t="+Date.now();
-
-        function render(){
-            msDom.innerText = cost === -1 ? "-1ms" : `${cost}ms`;
-
-            let activeDot = 0;
-            let colorClass = "red";
-
-            if(cost !== -1){
-                if(cost < 80){
-                    colorClass = "green";
-                    activeDot = 8;
-                }else if(cost <= 200){
-                    colorClass = "yellow";
-                    activeDot = Math.min(8, Math.ceil(cost / 25));
-                }else{
-                    colorClass = "red";
-                    activeDot = Math.min(8, Math.ceil((cost - 200) / 50));
-                }
-            }
-
-            dots.forEach((d,i)=>{
-                d.className = i < activeDot ? `dot ${colorClass}` : "dot";
-            });
-
-            if(cost === -1){
-                msDom.style.color = "#ef4444";
-            }else if(cost < 80){
-                msDom.style.color = "#22c55e";
-            }else{
-                msDom.style.color = "#f59e0b";
-            }
+    let activeDot = 0;
+    let colorClass = "red";
+    if(latency !== -1){
+        if(latency < 80){
+            colorClass = "green";
+            activeDot = 8;
+        }else if(latency <= 200){
+            colorClass = "yellow";
+            activeDot = Math.min(8, Math.ceil(latency / 25));
+        }else{
+            colorClass = "red";
+            activeDot = Math.min(8, Math.ceil((latency - 200) / 50));
         }
+    }
+    dots.forEach((d,i)=>{
+        d.className = i < activeDot ? `dot ${colorClass}` : "dot";
     });
+
+    if(latency === -1){
+        msDom.style.color = "#f56565";
+    }else if(latency < 80){
+        msDom.style.color = "#48bb78";
+    }else{
+        msDom.style.color = "#ecc94b";
+    }
+    //丢包颜色
+    if(lossRate === 0){
+        lossDom.style.color="#48bb78";
+    }else if(lossRate <=30){
+        lossDom.style.color="#ecc94b";
+    }else{
+        lossDom.style.color="#f56565";
+    }
 }
 
 async function batchPingAll(){
     const tasks = siteList.map((site,i)=> testLatency(i, site.url));
     await Promise.all(tasks);
-    setTimeout(batchPingAll, 5);
+    setTimeout(batchPingAll, 800);
 }
 
 addBtn.onclick = ()=>{
@@ -195,7 +207,6 @@ addBtn.onclick = ()=>{
     renderList();
 };
 
-// 初始化
 preloadIcons();
 renderList();
 batchPingAll();
