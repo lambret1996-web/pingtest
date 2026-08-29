@@ -277,7 +277,40 @@ let siteList = [
     {name:"ChatGPT", tag:"国际", url:"https://chat.openai.com/favicon.ico", link:"https://chat.openai.com"},
     {name:"X(Twitter)", tag:"国际", url:"https://x.com/favicon.ico", link:"https://x.com"}
 ];
+<script>
+// 同域名直接用相对路径即可
+const STAT_API = "/visit";
+const SAVE_API = "/save";
 
+// 页面加载自动获取访问统计并显示
+(async function loadVisitStat() {
+  try {
+    const res = await fetch(STAT_API);
+    const data = await res.json();
+    document.getElementById("totalVisit").textContent = data.total;
+    document.getElementById("todayVisit").textContent = data.today;
+  } catch (e) {
+    console.log("访问统计加载失败", e);
+  }
+})();
+
+// 测速完成后调用，自动筛选并保存优质线路
+function saveGoodPing(name, url, ms, loss) {
+  // 只保存延迟<200ms 且 丢包率为0的线路
+  if (ms !== -1 && ms < 800 && loss === 0) {
+    fetch(SAVE_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name,
+        testUrl: url,
+        ms: ms,
+        loss: loss
+      })
+    }).catch(e => console.log("上报失败", e));
+  }
+}
+</script>
 const WINDOW_SEC = 180;
 const siteSample = new Map();
 const TEST_ROUND = 4;
