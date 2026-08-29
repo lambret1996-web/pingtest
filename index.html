@@ -55,12 +55,16 @@ body {
     padding: 12px;
 }
     
-    .time-line {
+ .time-line {
     margin-top: 8px;
-    color: #94a3b8;
-    font-size: 18px;   /* 修改这里：字体大小，例如12px、14px、16px */
-    font-weight: 800;  /* 修改这里加粗：700粗，400普通 */
-}
+    font-size: 15px;
+    font-weight: 700;
+    /* 时间 绿 → 白 文字渐变 */
+    background: linear-gradient(90deg, #4ade80, #ffffff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+ }
 .add-row {
     display: flex;
     gap: 8px;
