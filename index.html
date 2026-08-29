@@ -149,7 +149,7 @@ button:active {
 /* 删除图标，网站名称左对齐，完整显示名称，不再截断 */
 .name {
     font-size: 16px;
-    padding-left：8px;
+    padding-left:8px;
     font-weight: 600;
     color: #e2e8f0;
     white-space: normal;
@@ -287,6 +287,7 @@ function renderList() {
 async function singleTest(imgUrl) {
     return new Promise(resolve => {
         const img = new Image();
+        img.crossOrigin = "anonymous"; //增加跨域请求标记
         let ok = false;
         let timer = setTimeout(() => {
             img.onload = null;
