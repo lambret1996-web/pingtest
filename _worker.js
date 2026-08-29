@@ -3,50 +3,47 @@ export default {
     const url = new URL(request.url);
     const kv = env.KV;
 
-    // 工具函数：格式化北京时间
-    const formatBeijingTime = (date = new Date()) => {
-      return new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        hour12: true
-      }).format(date);
+    // 工具函数：获取北京时间（UTC+8），返回格式化字符串 YYYY-MM-DD HH:mm:ss
+    const getBeijingTime = () => {
+      const now = new Date();
+      // 手动加8小时，转为北京时间
+      const beijingTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+      const year = beijingTime.getUTCFullYear();
+      const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+      const hours = String(beijingTime.getUTCHours()).padStart(2, '0');
+      const minutes = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+      const seconds = String(beijingTime.getUTCSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
-    // 工具函数：获取北京时间的日期字符串（YYYY-MM-DD，用于当日统计key）
+    // 工具函数：获取北京时间的日期字符串 YYYY-MM-DD（用于当日统计）
     const getBeijingDate = () => {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).format();
+      const now = new Date();
+      const beijingTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+      const year = beijingTime.getUTCFullYear();
+      const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     };
 
     // 1. 访问统计 + IP记录
     if (url.pathname === "/visit") {
       try {
         const ip = request.headers.get("cf-connecting-ip") || "unknown";
-        const today = getBeijingDate(); // 改用北京时间日期
+        const today = getBeijingDate();
         const totalKey = "visit:total_visit";
         const dayKey = `visit:day:${today}`;
         const ipKey = `visit:ip:${ip}`;
 
-        // 总访问量+1
         let total = Number(await kv.get(totalKey)) || 0;
         total += 1;
         await kv.put(totalKey, String(total));
 
-        // 今日访问量+1（按北京时间统计）
         let dayCnt = Number(await kv.get(dayKey)) || 0;
         dayCnt += 1;
         await kv.put(dayKey, String(dayCnt));
 
-        // 记录访客IP详情 - 兼容旧格式数据
         const ipRecordStr = await kv.get(ipKey);
         let ipRecord;
         try {
@@ -54,13 +51,13 @@ export default {
           if (!ipRecord || typeof ipRecord !== 'object' || !ipRecord.count) {
             throw new Error('格式不匹配');
           }
-          ipRecord.lastTime = formatBeijingTime(); // 北京时间
+          ipRecord.lastTime = getBeijingTime();
           ipRecord.count += 1;
         } catch (e) {
           ipRecord = {
             ip: ip,
-            firstTime: formatBeijingTime(), // 北京时间
-            lastTime: formatBeijingTime(),  // 北京时间
+            firstTime: getBeijingTime(),
+            lastTime: getBeijingTime(),
             count: 1
           };
         }
@@ -84,7 +81,7 @@ export default {
         const key = `ping:${now}_${Math.random().toString(36).slice(2)}`;
         const data = JSON.stringify({
           name, testUrl, ms, loss,
-          time: formatBeijingTime() // 测速记录也用北京时间
+          time: getBeijingTime()
         });
         await kv.put(key, data);
         return Response.json({ ok: true });
@@ -129,7 +126,6 @@ export default {
       }
     }
 
-    // 其他路径返回网页
     return env.ASSETS.fetch(request);
   }
 };
