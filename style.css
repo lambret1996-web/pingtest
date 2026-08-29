@@ -123,8 +123,8 @@ button:active {
 }
 
 .name {
-    width: 92px;
-    flex-shrink: 0;
+    flex: 1;
+    min-width: 60px;
     font-size: 15px;
     font-weight: 600;
     white-space: nowrap;
@@ -172,8 +172,8 @@ button:active {
 .dot-group {
     display: flex;
     gap: 3px;
-    flex: 1;
-    min-width: 70px;
+    flex-shrink: 0;
+    width: 88px;
     justify-content: flex-start;
 }
 
@@ -189,11 +189,10 @@ button:active {
 .yellow { background-color: #ecc94b; }
 .red { background-color: #f56565; }
 
-/* 小屏幕手机额外适配 */
 @media (max-width: 420px){
-    .name { width:76px; }
-    .ms { width:64px; }
-    .loss { width:54px; }
+    .tag { width: 48px; }
+    .ms { width: 64px; }
+    .loss { width: 54px; }
+    .dot-group { width:72px; gap:2px; }
     .dot { width:6px;height:6px; }
-    .dot-group { gap:2px; }
 }
