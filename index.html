@@ -287,7 +287,7 @@ function renderList() {
 async function singleTest(imgUrl) {
     return new Promise(resolve => {
         const img = new Image();
-        img.crossOrigin = "anonymous"; //增加跨域请求标记
+       // img.crossOrigin = "anonymous"; //增加跨域请求标记
         let ok = false;
         let timer = setTimeout(() => {
             img.onload = null;
