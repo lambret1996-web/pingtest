@@ -3,7 +3,7 @@
 <head> <!-- 头部区域，包含元数据、样式、脚本等 -->
 <meta charset="UTF-8"> <!-- 设置字符编码为UTF-8，支持中文防止乱码 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"> <!-- 视口设置：宽度=设备宽度，禁止缩放，适配刘海屏 -->
-<title>网络测试工具</title> <!-- 页面标题，显示在浏览器标签页 -->
+<title>管理后台</title> <!-- 页面标题，显示在浏览器标签页 -->
 <style> <!-- 样式表开始 -->
   * { /* 通配符选择器，选中所有元素 */
     margin: 0; /* 外边距设为0，清除浏览器默认外边距 */
@@ -198,11 +198,11 @@
   } /* 主线条结束 */
   .trend-glow { /* 趋势线发光层 */
     fill: none; /* 不填充 */
-    stroke-width: 2; /* 线宽4px */
+    stroke-width: 4; /* 线宽4px */
     stroke-linecap: round; /* 端点圆角 */
     stroke-linejoin: round; /* 连接点圆角 */
     opacity: 0.25; /* 透明度25% */
-    filter: blur(0.5px); /* 模糊1px，发光效果 */
+    filter: blur(1px); /* 模糊1px，发光效果 */
   } /* 发光层结束 */
   .latency-display { /* 延迟数值容器 */
     position: absolute; /* 绝对定位，相对于卡片 */
@@ -653,7 +653,7 @@
 
   // ==================== 启动 ====================
   renderList(); // 初始渲染列表（显示--等待首次测速）
-  showToast('测速启动中...'); // 提示用户
+  showToast('开始并发测速...'); // 提示用户
 
   updateData().then(function() { // 立即执行一次测速，然后按50ms间隔循环
     setInterval(updateData, UPDATE_INTERVAL); // 每50ms调用一次updateData
