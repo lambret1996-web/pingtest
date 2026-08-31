@@ -1,665 +1,302 @@
-<!DOCTYPE html> <!-- 声明文档类型为HTML5，告诉浏览器使用HTML5标准解析 -->
-<html lang="zh-CN"> <!-- 根元素，lang属性声明页面语言为简体中文 -->
-<head> <!-- 头部区域，包含元数据、样式、脚本等 -->
-<meta charset="UTF-8"> <!-- 设置字符编码为UTF-8，支持中文防止乱码 -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"> <!-- 视口设置：宽度=设备宽度，禁止缩放，适配刘海屏 -->
-<title>管理后台</title> <!-- 页面标题，显示在浏览器标签页 -->
-<style> <!-- 样式表开始 -->
-  * { /* 通配符选择器，选中所有元素 */
-    margin: 0; /* 外边距设为0，清除浏览器默认外边距 */
-    padding: 0; /* 内边距设为0，清除浏览器默认内边距 */
-    box-sizing: border-box; /* 盒模型设为border-box，宽高包含padding和border */
-    -webkit-tap-highlight-color: transparent; /* 移动端点击高亮设为透明，去掉灰色闪烁 */
-  } /* 通配符样式结束 */
-  :root { /* 根伪类，定义全局CSS变量 */
-    --bg: #F2F2F7; /* 背景色变量，iOS浅灰色 */
-    --card-bg: #FFFFFF; /* 卡片背景色，白色 */
-    --card-border: #E5E5EA; /* 卡片边框色，浅灰 */
-    --text-primary: #000000; /* 主要文字色，黑色 */
-    --text-secondary: #3C3C43; /* 次要文字色，深灰 */
-    --text-tertiary: #8E8E93; /* 辅助文字色，中灰 */
-    --green: #34C759; /* 绿色，低延迟状态 */
-    --orange: #FF9500; /* 橙色，中等延迟 */
-    --red: #FF3B30; /* 红色，高延迟 */
-    --blue: #007AFF; /* 蓝色，国际标签 */
-    --gray: #8E8E93; /* 灰色，离线状态 */
-    --safe-top: env(safe-area-inset-top, 0px); /* 顶部安全区，适配刘海屏 */
-    --safe-bottom: env(safe-area-inset-bottom, 0px); /* 底部安全区，适配底部横条 */
-  } /* 变量定义结束 */
-  html, body { /* 选中html和body */
-    height: 100%; /* 高度100%，占满视口 */
-    overflow: hidden; /* 溢出隐藏，滚动由内部列表管理 */
-  } /* html和body样式结束 */
-  body { /* body全局样式 */
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; /* 字体栈：苹果字体优先，回退中文字体 */
-    background: var(--bg); /* 背景色使用变量 */
-    color: var(--text-primary); /* 文字颜色使用变量 */
-    font-size: 17px; /* 基础字号17px，iOS标准正文字号 */
-    line-height: 1.4; /* 行高1.4倍 */
-    -webkit-font-smoothing: antialiased; /* 字体抗锯齿 */
-  } /* body样式结束 */
-  .app-container { /* 应用最外层容器 */
-    width: 100%; /* 宽度100% */
-    max-width: 430px; /* 最大宽度430px，模拟手机宽度，桌面端居中 */
-    height: 100vh; /* 高度100视口高度 */
-    height: 100dvh; /* 高度100动态视口高度，适配移动端地址栏伸缩 */
-    margin: 0 auto; /* 左右自动，水平居中 */
-    background: var(--bg); /* 背景色 */
-    position: relative; /* 相对定位，作为内部绝对定位参照 */
-    overflow: hidden; /* 溢出隐藏 */
-    display: flex; /* 弹性布局 */
-    flex-direction: column; /* 子元素垂直排列 */
-  } /* 应用容器结束 */
-  @media (min-width: 431px) { /* 媒体查询：屏幕>=431px（桌面端） */
-    body { /* 桌面端body */
-      background: #E5E5EA; /* 背景色稍深，突出手机容器 */
-      display: flex; /* 弹性布局 */
-      align-items: center; /* 垂直居中 */
-      justify-content: center; /* 水平居中 */
-    } /* 桌面端body结束 */
-    .app-container { /* 桌面端应用容器 */
-      height: 90vh; /* 高度90视口高度 */
-      max-height: 932px; /* 最大高度932px */
-      border-radius: 40px; /* 圆角40px，模拟手机外观 */
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05); /* 阴影：大阴影+细边框 */
-    } /* 桌面端容器结束 */
-  } /* 媒体查询结束 */
-  .monitor-bar { /* 顶部监控状态条 */
-    display: flex; /* 弹性布局 */
-    align-items: center; /* 垂直居中 */
-    justify-content: center; /* 水平居中 */
-    gap: 6px; /* 子元素间距6px */
-    padding: 10px 16px 6px; /* 内边距：上10，左右16，下6 */
-    font-size: 12px; /* 字号12px */
-    color: var(--text-tertiary); /* 文字灰色 */
-    font-weight: 500; /* 字重500 */
-    flex-shrink: 0; /* 不允许被压缩 */
-  } /* 状态条结束 */
-  .monitor-dot { /* 呼吸指示灯圆点 */
-    width: 6px; /* 宽6px */
-    height: 6px; /* 高6px */
-    border-radius: 50%; /* 圆形 */
-    background: var(--green); /* 绿色 */
-    animation: pulse 0.05s ease-in-out infinite; /* 呼吸动画，50ms无限循环（配合50ms刷新） */
-  } /* 指示灯结束 */
-  @keyframes pulse { /* 呼吸动画关键帧 */
-    0%, 100% { opacity: 1; transform: scale(1); } /* 开始结束：不透明，原始大小 */
-    50% { opacity: 0.3; transform: scale(0.7); } /* 中间：半透明，缩小70% */
-  } /* 呼吸动画结束 */
-  .list-container { /* 列表容器，可滚动区域 */
-    flex: 1; /* 占满剩余空间 */
-    overflow-y: auto; /* 垂直溢出自动滚动 */
-    overflow-x: hidden; /* 水平溢出隐藏 */
-    -webkit-overflow-scrolling: touch; /* iOS惯性滚动 */
-    padding: 4px 14px calc(24px + var(--safe-bottom)); /* 内边距，底部含安全区 */
-    overscroll-behavior: contain; /* 防止滚动穿透 */
-  } /* 列表容器结束 */
-  .list-container::-webkit-scrollbar { /* 列表滚动条 */
-    display: none; /* 隐藏滚动条 */
-  } /* 滚动条结束 */
-  .service-card { /* 服务卡片 */
-    background: var(--card-bg); /* 白色背景 */
-    border: 1px solid var(--card-border); /* 1px浅灰边框 */
-    border-radius: 16px; /* 圆角16px */
-    padding: 12px 14px 10px; /* 内边距 */
-    margin-bottom: 10px; /* 底部间距10px */
-    position: relative; /* 相对定位 */
-    overflow: hidden; /* 溢出隐藏 */
-    transition: transform 0.15s, box-shadow 0.15s; /* 过渡动画 */
-    cursor: pointer; /* 手型指针，表示可点击 */
-    animation: cardIn 0.4s ease-out both; /* 入场动画 */
-    min-height: 82px; /* 最小高度82px */
-  } /* 卡片结束 */
-  .service-card:active { /* 卡片按下状态 */
-    transform: scale(0.98); /* 缩小98%，按压效果 */
-  } /* 按下状态结束 */
-  @keyframes cardIn { /* 卡片入场动画 */
-    from { opacity: 0; transform: translateY(12px); } /* 开始：透明，下移12px */
-    to { opacity: 1; transform: translateY(0); } /* 结束：不透明，原位 */
-  } /* 入场动画结束 */
-  .card-top { /* 卡片顶部行：图标+名称+标签 */
-    display: flex; /* 弹性布局，水平排列 */
-    align-items: center; /* 垂直居中 */
-    gap: 10px; /* 间距10px */
-    position: relative; /* 相对定位 */
-    z-index: 2; /* 层级2，在趋势线之上 */
-  } /* 顶部行结束 */
-  .service-icon { /* 服务图标容器 */
-    width: 40px; /* 宽40px */
-    height: 40px; /* 高40px */
-    border-radius: 10px; /* 圆角10px */
-    display: flex; /* 弹性布局 */
-    align-items: center; /* 垂直居中 */
-    justify-content: center; /* 水平居中 */
-    flex-shrink: 0; /* 不压缩 */
-    overflow: hidden; /* 溢出隐藏 */
-    background: #f5f5f5; /* 默认灰色背景，图标加载前显示 */
-  } /* 图标容器结束 */
-  .service-icon img { /* 图标内的img标签（官方favicon） */
-    width: 26px; /* 宽26px */
-    height: 26px; /* 高26px */
-    object-fit: contain; /* 保持比例缩放，完整显示 */
-    display: block; /* 块级显示 */
-  } /* 图标img结束 */
-  .service-info { /* 服务信息容器：名称+标签 */
-    display: flex; /* 弹性布局 */
-    align-items: center; /* 垂直居中 */
-    gap: 6px; /* 间距6px */
-    flex: 1; /* 占满剩余空间 */
-    min-width: 0; /* 最小宽度0，允许省略 */
-  } /* 信息容器结束 */
-  .service-name { /* 服务名称 */
-    font-size: 16px; /* 字号16px */
-    font-weight: 700; /* 粗体 */
-    color: var(--text-primary); /* 黑色 */
-    white-space: nowrap; /* 不换行 */
-    overflow: hidden; /* 溢出隐藏 */
-    text-overflow: ellipsis; /* 溢出显示省略号 */
-  } /* 名称结束 */
-  .service-tag { /* 区域标签：国内/国际 */
-    font-size: 12px; /* 字号12px */
-    font-weight: 600; /* 半粗体 */
-    padding: 1px 7px; /* 内边距 */
-    border-radius: 5px; /* 圆角5px */
-    flex-shrink: 0; /* 不压缩 */
-  } /* 标签结束 */
-  .tag-domestic { /* 国内标签 */
-    color: var(--green); /* 绿色文字 */
-    background: rgba(52, 199, 89, 0.12); /* 淡绿背景 */
-  } /* 国内标签结束 */
-  .tag-international { /* 国际标签 */
-    color: var(--blue); /* 蓝色文字 */
-    background: rgba(0, 122, 255, 0.12); /* 淡蓝背景 */
-  } /* 国际标签结束 */
-  .card-bottom { /* 卡片底部行：趋势线 */
-    display: flex; /* 弹性布局 */
-    align-items: center; /* 垂直居中 */
-    margin-top: 6px; /* 顶部间距6px */
-    padding-left: 0px; /* 左内边距0px，趋势线从最左边开始（用户要求） */
-    position: relative; /* 相对定位 */
-    z-index: 1; /* 层级1 */
-  } /* 底部行结束 */
-  .trend-chart { /* 趋势线容器 */
-    flex: 1; /* 占满剩余宽度 */
-    height: 28px; /* 高28px */
-    min-width: 0; /* 最小宽度0 */
-  } /* 趋势线容器结束 */
-  .trend-chart svg { /* 趋势线SVG */
-    width: 100%; /* 宽100% */
-    height: 100%; /* 高100% */
-    display: block; /* 块级显示 */
-    overflow: visible; /* 溢出可见 */
-  } /* SVG结束 */
-  .trend-line { /* 趋势线主线条 */
-    fill: none; /* 不填充 */
-    stroke-width: 1.8; /* 线宽1.8px */
-    stroke-linecap: round; /* 端点圆角 */
-    stroke-linejoin: round; /* 连接点圆角 */
-  } /* 主线条结束 */
-  .trend-glow { /* 趋势线发光层 */
-    fill: none; /* 不填充 */
-    stroke-width: 4; /* 线宽4px */
-    stroke-linecap: round; /* 端点圆角 */
-    stroke-linejoin: round; /* 连接点圆角 */
-    opacity: 0.25; /* 透明度25% */
-    filter: blur(1px); /* 模糊1px，发光效果 */
-  } /* 发光层结束 */
-  .latency-display { /* 延迟数值容器 */
-    position: absolute; /* 绝对定位，相对于卡片 */
-    right: 14px; /* 距右14px */
-    top: 50%; /* 距顶50% */
-    transform: translateY(-50%); /* 上移50%，垂直居中 */
-    display: flex; /* 弹性布局 */
-    align-items: baseline; /* 基线对齐 */
-    z-index: 3; /* 层级3，最上层 */
-  } /* 数值容器结束 */
-  .latency-value { /* 延迟数值 */
-    font-size: 34px; /* 字号34px，大数字 */
-    font-weight: 800; /* 特粗体 */
-    line-height: 1; /* 行高1 */
-    letter-spacing: -0.5px; /* 字间距-0.5px */
-    font-variant-numeric: tabular-nums; /* 数字等宽 */
-    transition: color 0.3s; /* 颜色过渡0.3秒 */
-  } /* 数值结束 */
-  .latency-unit { /* 延迟单位ms */
-    font-size: 14px; /* 字号14px */
-    font-weight: 600; /* 半粗体 */
-    margin-left: 2px; /* 左间距2px */
-    opacity: 0.7; /* 透明度70% */
-    transition: color 0.3s; /* 颜色过渡 */
-  } /* 单位结束 */
-  .latency-good { color: var(--green); } /* 低延迟：绿色 */
-  .latency-warning { color: var(--orange); } /* 中等延迟：橙色 */
-  .latency-bad { color: var(--red); } /* 高延迟：红色 */
-  .latency-offline { color: var(--gray); } /* 离线：灰色 */
-  .card-detail { /* 卡片详情展开区域 */
-    max-height: 0; /* 最大高度0，默认收起 */
-    overflow: hidden; /* 溢出隐藏 */
-    transition: max-height 0.3s ease-out, margin-top 0.3s ease-out; /* 展开收起动画 */
-    margin-top: 0; /* 顶部间距0 */
-  } /* 详情结束 */
-  .card-detail.open { /* 详情展开状态 */
-    max-height: 160px; /* 最大高度160px */
-    margin-top: 10px; /* 顶部间距10px */
-  } /* 展开状态结束 */
-  .detail-content { /* 详情内容网格 */
-    border-top: 1px solid var(--card-border); /* 顶部边框分隔 */
-    padding-top: 10px; /* 顶部内边距 */
-    display: grid; /* 网格布局 */
-    grid-template-columns: 1fr 1fr; /* 两列等宽 */
-    gap: 8px; /* 网格间距8px */
-  } /* 详情内容结束 */
-  .detail-item { /* 详情项 */
-    display: flex; /* 弹性布局，垂直排列 */
-    flex-direction: column; /* 列方向 */
-    gap: 2px; /* 间距2px */
-  } /* 详情项结束 */
-  .detail-label { /* 详情标签 */
-    font-size: 11px; /* 字号11px */
-    color: var(--text-tertiary); /* 灰色 */
-    font-weight: 500; /* 字重500 */
-  } /* 标签结束 */
-  .detail-value { /* 详情数值 */
-    font-size: 14px; /* 字号14px */
-    color: var(--text-secondary); /* 深灰 */
-    font-weight: 600; /* 半粗体 */
-    font-variant-numeric: tabular-nums; /* 数字等宽 */
-  } /* 数值结束 */
-  .list-footer { /* 列表底部说明 */
-    text-align: center; /* 文字居中 */
-    padding: 14px 0; /* 内边距上下14px */
-    font-size: 13px; /* 字号13px */
-    color: var(--text-tertiary); /* 灰色 */
-  } /* 底部结束 */
-  .toast { /* Toast轻提示 */
-    position: fixed; /* 固定定位 */
-    bottom: calc(40px + var(--safe-bottom)); /* 距底部40px+安全区 */
-    left: 50%; /* 距左50% */
-    transform: translateX(-50%) translateY(20px); /* 居中，下移20px（隐藏） */
-    background: rgba(0,0,0,0.8); /* 黑色80%透明 */
-    color: #fff; /* 白色文字 */
-    padding: 10px 20px; /* 内边距 */
-    border-radius: 20px; /* 圆角20px，胶囊形 */
-    font-size: 14px; /* 字号14px */
-    font-weight: 500; /* 字重500 */
-    opacity: 0; /* 透明，默认隐藏 */
-    transition: opacity 0.25s, transform 0.25s; /* 过渡动画 */
-    z-index: 100; /* 层级100，最顶层 */
-    pointer-events: none; /* 不响应点击 */
-  } /* Toast结束 */
-  .toast.show { /* Toast显示状态 */
-    opacity: 1; /* 不透明 */
-    transform: translateX(-50%) translateY(0); /* 上滑入 */
-  } /* Toast显示结束 */
-</style> <!-- 样式表结束 -->
-</head> <!-- 头部结束 -->
-<body> <!-- 主体开始 -->
-<div class="app-container" id="app"> <!-- 应用容器 -->
-  <div class="monitor-bar"> <!-- 监控状态条 -->
-    <span class="monitor-dot"></span> <!-- 呼吸指示灯 -->
-    <span>真实测速中 · 50ms 并发刷新</span> <!-- 状态文字 -->
-  </div> <!-- 状态条结束 -->
-  <div class="list-container" id="listContainer"></div> <!-- 列表容器，JS动态生成卡片 -->
-</div> <!-- 应用容器结束 -->
-<div class="toast" id="toast"></div> <!-- Toast容器 -->
-<script> <!-- 脚本开始 -->
-(function() { // 立即执行函数(IIFE)，创建独立作用域，避免变量污染全局
-  'use strict'; // 严格模式，消除JS语法隐患
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Ping全自动延迟测试</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #F2F2F7; --card-bg: #FFFFFF; --card-border: #E5E5EA;
+    --text-primary: #1C1C1E; --text-secondary: #3C3C43; --text-tertiary: #8E8E93;
+    --green: #34C759; --orange: #FF9500; --red: #FF3B30; --blue: #007AFF; --purple: #AF52DE; --gray: #8E8E93;
+    --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text-primary); font-size: 17px; line-height: 1.4; -webkit-font-smoothing: antialiased;
+  }
+  .app-container {
+    width: 100%; max-width: 430px; height: 100vh; height: 100dvh; margin: 0 auto;
+    background: var(--bg); position: relative; overflow: hidden; display: flex; flex-direction: column;
+  }
+  @media (min-width: 431px) {
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; }
+    .app-container { height: 90vh; max-height: 932px; border-radius: 40px; box-shadow: 0 25px 80px rgba(0,0,0,0.25); }
+  }
+  /* 标题 */
+  .page-header { text-align: center; padding: 16px 16px 8px; flex-shrink: 0; }
+  .page-title {
+    font-size: 26px; font-weight: 800; letter-spacing: 1px;
+    background: linear-gradient(135deg, #007AFF 0%, #AF52DE 50%, #FF2D55 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px;
+  }
+  .page-subtitle { font-size: 12px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
+  /* IP信息框 */
+  .info-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); border: 1px solid rgba(0,122,255,0.1);
+    border-radius: 18px; padding: 14px 16px; margin: 6px 14px 4px; flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,122,255,0.08); position: relative; overflow: hidden;
+  }
+  .info-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #007AFF, #AF52DE, #FF2D55);
+  }
+  .ip-bar { display: flex; flex-direction: column; gap: 8px; }
+  .ip-row { display: flex; align-items: center; font-size: 13px; color: var(--text-secondary); gap: 8px; }
+  .ip-icon {
+    width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .ip-icon.ip { background: rgba(0,122,255,0.1); }
+  .ip-icon.isp { background: rgba(175,82,222,0.1); }
+  .ip-icon.loc { background: rgba(255,45,85,0.1); }
+  .ip-row .label { color: var(--text-tertiary); min-width: 60px; font-weight: 500; font-size: 12px; }
+  .ip-row span.value { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .time-line {
+    display: flex; align-items: center; font-size: 13px; color: var(--text-secondary);
+    padding-top: 10px; border-top: 1px dashed rgba(0,122,255,0.15); margin-top: 2px; gap: 8px;
+  }
+  .time-line .ip-icon { background: rgba(52,199,89,0.1); }
+  .time-line .label { color: var(--text-tertiary); min-width: 60px; font-weight: 500; font-size: 12px; }
+  .time-line span.value { font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; font-size: 14px; }
+  /* 监控状态条 */
+  .monitor-bar { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 16px 4px; font-size: 12px; color: var(--text-tertiary); font-weight: 500; flex-shrink: 0; }
+  .monitor-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 0.05s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
+  /* 列表 */
+  .list-container { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 4px 14px 0; overscroll-behavior: contain; }
+  .list-container::-webkit-scrollbar { display: none; }
+  /* 卡片 */
+  .service-card {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
+    padding: 14px 14px 10px; margin-bottom: 12px; position: relative; overflow: hidden;
+    transition: transform 0.15s; cursor: pointer; animation: cardIn 0.4s ease-out both; min-height: 90px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .service-card:active { transform: scale(0.98); }
+  @keyframes cardIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .card-top { display: flex; align-items: center; gap: 10px; position: relative; z-index: 2; }
+  .site-header, .site-link { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .site-link { cursor: pointer; text-decoration: none; color: inherit; }
+  .service-icon {
+    width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden; background: #f5f5f5; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .service-icon img { width: 28px; height: 28px; object-fit: contain; display: block; }
+  .service-info { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .service-name { font-size: 16px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .service-tag { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
+  .tag-domestic { color: var(--green); background: rgba(52,199,89,0.12); }
+  .tag-international { color: var(--blue); background: rgba(0,122,255,0.12); }
+  /* 渐变面积趋势线 */
+  .card-bottom { display: flex; align-items: flex-end; margin-top: 1px; padding-left: 0; position: relative; z-index: 1; height: 44px; }
+  .trend-chart { flex: 1; height: 44px; min-width: 0; }
+  .trend-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .trend-area { stroke: none; }
+  .trend-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .trend-dot { stroke: #fff; stroke-width: 2; }
+  /* 延迟数值 */
+  .latency-display { position: absolute; right: 14px; top: 28px; display: flex; align-items: baseline; z-index: 3; }
+  .latency-value { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+  .latency-unit { font-size: 13px; font-weight: 600; margin-left: 2px; opacity: 0.7; transition: color 0.3s; }
+  .latency-good { color: var(--green); }
+  .latency-warning { color: var(--orange); }
+  .latency-bad { color: var(--red); }
+  .latency-offline { color: var(--gray); }
+  /* 详情面板 */
+  .card-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, margin-top 0.3s ease-out; margin-top: 0; }
+  .card-detail.open { max-height: 180px; margin-top: 12px; }
+  .detail-content { border-top: 1px solid var(--card-border); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .detail-item { display: flex; flex-direction: column; gap: 4px; }
+  .detail-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+  .detail-value { font-size: 14px; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
+  /* 页脚 */
+  .list-footer { text-align: center; padding: 16px 0 calc(24px + var(--safe-bottom)); font-size: 12px; color: var(--text-tertiary); line-height: 1.8; }
+  .visit-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 10px; }
+  .visit-stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .visit-stat-num {
+    font-size: 22px; font-weight: 800;
+    background: linear-gradient(135deg, #007AFF, #AF52DE);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    font-variant-numeric: tabular-nums;
+  }
+  .visit-stat-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+  .footer-divider { width: 50px; height: 1px; background: var(--card-border); margin: 10px auto; }
+  /* Toast */
+  .toast {
+    position: fixed; bottom: calc(40px + var(--safe-bottom)); left: 50%;
+    transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.8); color: #fff;
+    padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 500;
+    opacity: 0; transition: opacity 0.25s, transform 0.25s; z-index: 100; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app-container" id="app">
+  <div class="page-header">
+    <div class="page-title">Ping 延迟测试</div>
+    <div class="page-subtitle">Real-time Network Monitor</div>
+  </div>
+  <div class="info-card">
+    <div class="ip-bar">
+      <div class="ip-row"><div class="ip-icon ip">🌐</div><span class="label">当前IP</span><span class="value" id="clientIp">获取中</span></div>
+      <div class="ip-row"><div class="ip-icon isp">📡</div><span class="label">运营商</span><span class="value" id="isp">获取中</span></div>
+      <div class="ip-row"><div class="ip-icon loc">📍</div><span class="label">位置</span><span class="value" id="location">获取中</span></div>
+      <div class="time-line"><div class="ip-icon">⏰</div><span class="label">北京时间</span><span class="value" id="nowTime">--</span></div>
+    </div>
+  </div>
+  <div class="monitor-bar"><span class="monitor-dot"></span><span>真实测速中</span></div>
+  <div class="list-container" id="listContainer"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(function() {
+  'use strict';
+  const UPDATE_INTERVAL = 50, DATA_POINTS = 56, TIMEOUT_MS = 3000;
+  let isUpdating = false;
+  const API_BASE = "";
 
-  // ==================== 配置区 ====================
-  const UPDATE_INTERVAL = 50;     // 刷新间隔：50毫秒（用户要求，每秒20次）
-  const DATA_POINTS = 56;          // 趋势线保留的数据点数量
-  const TIMEOUT_MS = 3000;         // 单次测速超时时间：3秒
-  let isUpdating = false;           // 并发测速锁，防止上一轮未完成就开始下一轮
-
-  // 站点配置数组：每个站点包含显示信息、图标URL、测速URL
-  // iconUrl用于显示官方favicon图标（带缓存正常显示）
-  // testUrl用于测速（加时间戳防缓存，与图标显示互不干扰）
+  // 仅 GitHub 保留 siteUrl 跳转，其他站点 siteUrl 为 null
   const serviceConfigs = [
-    { // 王者荣耀（原抖音位置）
-      id: 'wangzhe', name: '王者荣耀', region: 'domestic', regionLabel: '国内',
-      trendColor: '#81C784', // 趋势线颜色：绿色
-      iconUrl: 'https://pvp.qq.com/favicon.ico', // 官方图标：王者荣耀官网favicon
-      testUrl: 'https://pvp.qq.com/favicon.ico'  // 测速地址：加载favicon计时
-    },
-    { // 和平精英（原B站位置）
-      id: 'heping', name: '和平精英', region: 'domestic', regionLabel: '国内',
-      trendColor: '#81C784', // 趋势线颜色：绿色
-      iconUrl: 'https://gp.qq.com/favicon.ico', // 官方图标：和平精英官网favicon
-      testUrl: 'https://gp.qq.com/favicon.ico'  // 测速地址
-    },
-    { // 抖音（原微信位置）
-      id: 'douyin', name: '抖音', region: 'domestic', regionLabel: '国内',
-      trendColor: '#81C784', // 趋势线颜色：绿色
-      iconUrl: 'https://www.douyin.com/favicon.ico', // 官方图标：抖音官网favicon
-      testUrl: 'https://www.douyin.com/favicon.ico'  // 测速地址
-    },
-    { // 淘宝
-      id: 'taobao', name: '淘宝', region: 'domestic', regionLabel: '国内',
-      trendColor: '#81C784', // 趋势线颜色：绿色
-      iconUrl: 'https://www.taobao.com/favicon.ico', // 官方图标
-      testUrl: 'https://www.taobao.com/favicon.ico'  // 测速地址
-    },
-    { // Cloudflare
-      id: 'cloudflare', name: 'Cloudflare', region: 'international', regionLabel: '国际',
-      trendColor: '#FFB74D', // 趋势线颜色：橙色
-      iconUrl: 'https://www.cloudflare.com/favicon.ico', // 官方图标
-      testUrl: 'https://www.cloudflare.com/favicon.ico'  // 测速地址
-    },
-    { // GitHub
-      id: 'github', name: 'GitHub', region: 'international', regionLabel: '国际',
-      trendColor: '#FFB74D', // 趋势线颜色：橙色
-      iconUrl: 'https://github.com/favicon.ico', // 官方图标
-      testUrl: 'https://github.com/favicon.ico'  // 测速地址
-    },
-    { // ChatGPT
-      id: 'chatgpt', name: 'ChatGPT', region: 'international', regionLabel: '国际',
-      trendColor: '#E57373', // 趋势线颜色：红色
-      iconUrl: 'https://chat.openai.com/favicon.ico', // 官方图标
-      testUrl: 'https://chat.openai.com/favicon.ico'  // 测速地址
-    },
-    { // Telegram
-      id: 'telegram', name: 'Telegram', region: 'international', regionLabel: '国际',
-      trendColor: '#E57373', // 趋势线颜色：红色
-      iconUrl: 'https://web.telegram.org/favicon.ico', // 官方图标
-      testUrl: 'https://web.telegram.org/favicon.ico'  // 测速地址
-    },
-    { // X
-      id: 'xcom', name: 'X', region: 'international', regionLabel: '国际',
-      trendColor: '#E57373', // 趋势线颜色：红色
-      iconUrl: 'https://x.com/favicon.ico', // 官方图标
-      testUrl: 'https://x.com/favicon.ico'  // 测速地址
-    },
-    { // YouTube
-      id: 'youtube', name: 'YouTube', region: 'international', regionLabel: '国际',
-      trendColor: '#E57373', // 趋势线颜色：红色
-      iconUrl: 'https://www.youtube.com/favicon.ico', // 官方图标
-      testUrl: 'https://www.youtube.com/favicon.ico'  // 测速地址
-    }
-  ]; // 站点配置数组结束
+    { id:'wangzhe', name:'王者荣耀', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://pvp.qq.com/favicon.ico', testUrl:'https://pvp.qq.com/favicon.ico', siteUrl:null },
+    { id:'heping', name:'和平精英', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://gp.qq.com/favicon.ico', testUrl:'https://gp.qq.com/favicon.ico', siteUrl:null },
+    { id:'douyin', name:'抖音', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://www.douyin.com/favicon.ico', testUrl:'https://www.douyin.com/favicon.ico', siteUrl:null },
+    { id:'taobao', name:'淘宝', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://www.taobao.com/favicon.ico', testUrl:'https://www.taobao.com/favicon.ico', siteUrl:null },
+    { id:'cloudflare', name:'Cloudflare', region:'international', regionLabel:'国际', trendColor:'#FF9500', iconUrl:'https://www.cloudflare.com/favicon.ico', testUrl:'https://www.cloudflare.com/favicon.ico', siteUrl:null },
+    { id:'github', name:'GitHub', region:'international', regionLabel:'国际', trendColor:'#FF9500', iconUrl:'https://github.com/favicon.ico', testUrl:'https://github.com/favicon.ico', siteUrl:'https://github.com' },
+    { id:'chatgpt', name:'ChatGPT', region:'international', regionLabel:'国际', trendColor:'#FF3B30', iconUrl:'https://chat.openai.com/favicon.ico', testUrl:'https://chat.openai.com/favicon.ico', siteUrl:null },
+    { id:'telegram', name:'Telegram', region:'international', regionLabel:'国际', trendColor:'#FF3B30', iconUrl:'https://web.telegram.org/favicon.ico', testUrl:'https://web.telegram.org/favicon.ico', siteUrl:null },
+    { id:'xcom', name:'X', region:'international', regionLabel:'国际', trendColor:'#FF3B30', iconUrl:'https://x.com/favicon.ico', testUrl:'https://x.com/favicon.ico', siteUrl:null },
+    { id:'youtube', name:'YouTube', region:'international', regionLabel:'国际', trendColor:'#FF3B30', iconUrl:'https://www.youtube.com/favicon.ico', testUrl:'https://www.youtube.com/favicon.ico', siteUrl:null }
+  ];
 
-  // ==================== 真实测速核心函数 ====================
-  // 用Image对象加载目标站点的favicon.ico，记录请求耗时作为网络延迟
-  // 原理：图片加载不受同源策略限制，通用性最强；加时间戳防止浏览器缓存
-  function measureLatency(url) {
-    return new Promise(function(resolve) { // 返回Promise，支持异步调用
-      const start = performance.now();      // 记录开始时间（高精度计时器）
-      const img = new Image();               // 创建Image对象用于加载图片
-      let settled = false;                   // 完成标志，防止onload和onerror重复触发
+  // IP信息
+  (async function(){ try{ const r=await fetch("https://api.ip.sb/geoip"), d=await r.json();
+    document.getElementById("clientIp").textContent=d.ip;
+    document.getElementById("location").textContent=d.country+" "+(d.city||"");
+    document.getElementById("isp").textContent=d.isp||"未知";
+  }catch(e){ document.getElementById("clientIp").textContent="获取失败"; document.getElementById("location").textContent="获取失败"; document.getElementById("isp").textContent="获取失败"; }})();
 
-      img.onload = function() { // 加载成功回调
-        if (settled) return;    // 已完成则忽略
-        settled = true;          // 标记已完成
-        resolve(performance.now() - start); // 返回耗时（毫秒）
-      };
+  // 北京时间
+  function updateBeijingTime(){ const n=new Date(), b=new Date(n.getTime()+8*3600*1000);
+    const y=b.getUTCFullYear(), m=String(b.getUTCMonth()+1).padStart(2,'0'), d=String(b.getUTCDate()).padStart(2,'0'),
+    h=String(b.getUTCHours()).padStart(2,'0'), mi=String(b.getUTCMinutes()).padStart(2,'0'), s=String(b.getUTCSeconds()).padStart(2,'0');
+    document.getElementById("nowTime").innerText=y+"-"+m+"-"+d+" "+h+":"+mi+":"+s; }
+  updateBeijingTime(); setInterval(updateBeijingTime,1000);
 
-      img.onerror = function() { // 加载失败回调（跨域/404/网络不通都会触发）
-        if (settled) return;     // 已完成则忽略
-        settled = true;           // 标记已完成
-        const elapsed = performance.now() - start; // 计算已耗时
-        resolve(elapsed > 50 ? elapsed : null); // 耗时>50ms认为有真实网络交互，否则视为不可达
-      };
+  // 访问统计
+  async function reportVisit(){ try{ const r=await fetch(API_BASE+"/visit"), d=await r.json();
+    const t=document.getElementById('visitTotal'), td=document.getElementById('visitToday');
+    if(t)t.textContent=d.total||0; if(td)td.textContent=d.today||0;
+  }catch(e){ const t=document.getElementById('visitTotal'), td=document.getElementById('visitToday'); if(t)t.textContent='--'; if(td)td.textContent='--'; }}
 
-      img.src = url + '?t=' + Date.now() + Math.random(); // 设置图片URL，加时间戳+随机数防缓存
+  // 真实测速
+  function measureLatency(url){ return new Promise(function(resolve){
+    const start=performance.now(), img=new Image(); let settled=false;
+    img.onload=function(){ if(settled)return; settled=true; resolve(performance.now()-start); };
+    img.onerror=function(){ if(settled)return; settled=true; const e=performance.now()-start; resolve(e>50?e:null); };
+    img.src=url+'?t='+Date.now()+Math.random();
+    setTimeout(function(){ if(settled)return; settled=true; resolve(null); }, TIMEOUT_MS);
+  });}
 
-      setTimeout(function() { // 超时保护：超过TIMEOUT_MS未完成则视为超时
-        if (settled) return;  // 已完成则忽略
-        settled = true;        // 标记已完成
-        resolve(null);         // 返回null表示超时/不可达
-      }, TIMEOUT_MS);
+  function initService(c){ return {...c, latency:null, trendData:[], level:'offline', failCount:0}; }
+  function getLevel(l){ if(l===null)return'offline'; if(l<100)return'good'; if(l<300)return'warning'; return'bad'; }
+  function calcJitter(d){ if(d.length<2)return 0; const m=d.reduce((a,b)=>a+b,0)/d.length; return Math.sqrt(d.reduce((s,v)=>s+Math.pow(v-m,2),0)/d.length); }
+
+  const services=serviceConfigs.map(initService);
+  let expandedCardId=null;
+  const listContainer=document.getElementById('listContainer'), toast=document.getElementById('toast');
+
+  // 渐变面积趋势线（平滑曲线+渐变填充+末端数据点）
+  function generateTrendSVG(service, width, height){
+    const data=service.trendData; if(data.length<2)return '';
+    const pad=height*0.1, uh=height-pad*2, sx=width/(data.length-1);
+    const min=Math.min(...data), max=Math.max(...data), range=max-min||1, gid='grad-'+service.id;
+    const pts=data.map((v,i)=>({x:i*sx, y:pad+uh-((v-min)/range)*uh}));
+    let lp='M '+pts[0].x.toFixed(1)+','+pts[0].y.toFixed(1);
+    for(let i=1;i<pts.length;i++){ const p=pts[i-1],c=pts[i],cx=(p.x+c.x)/2; lp+=' Q '+cx.toFixed(1)+','+p.y.toFixed(1)+' '+c.x.toFixed(1)+','+c.y.toFixed(1); }
+    const last=pts[pts.length-1], first=pts[0];
+    const ap=lp+' L '+last.x.toFixed(1)+','+height+' L '+first.x.toFixed(1)+','+height+' Z';
+    return '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0%" stop-color="'+service.trendColor+'" stop-opacity="0.35"/>'+
+      '<stop offset="100%" stop-color="'+service.trendColor+'" stop-opacity="0"/></linearGradient></defs>'+
+      '<path class="trend-area" d="'+ap+'" fill="url(#'+gid+')"/>'+
+      '<path class="trend-line" d="'+lp+'" stroke="'+service.trendColor+'"/>'+
+      '<circle cx="'+last.x.toFixed(1)+'" cy="'+last.y.toFixed(1)+'" r="6" fill="'+service.trendColor+'" opacity="0.25"/>'+
+      '<circle class="trend-dot" cx="'+last.x.toFixed(1)+'" cy="'+last.y.toFixed(1)+'" r="3.5" fill="'+service.trendColor+'"/>';
+  }
+
+  function animateNumber(el,from,to,dur){ if(from===null)from=0; const st=performance.now();
+    function up(ct){ const p=Math.min((ct-st)/dur,1), e=1-Math.pow(1-p,3); el.textContent=Math.round(from+(to-from)*e); if(p<1)requestAnimationFrame(up);} requestAnimationFrame(up); }
+
+  function renderCard(service, index){
+    const card=document.createElement('div'); card.className='service-card'; card.dataset.id=service.id;
+    card.style.animationDelay=(index*0.04)+'s';
+    const lc='latency-'+service.level, tc=service.region==='domestic'?'tag-domestic':'tag-international';
+    const svg=generateTrendSVG(service,DATA_POINTS-1,44), dv=service.latency===null?'--':Math.round(service.latency);
+    const ht=service.siteUrl?'a':'div', ha=service.siteUrl?'href="'+service.siteUrl+'" target="_blank" rel="noopener noreferrer"':'';
+    card.innerHTML='<div class="card-top"><'+ht+' class="'+(service.siteUrl?'site-link':'site-header')+'" '+ha+'>'+
+      '<div class="service-icon"><img src="'+service.iconUrl+'" alt="'+service.name+'" onerror="this.style.display=\'none\'"></div>'+
+      '<div class="service-info"><span class="service-name">'+service.name+'</span><span class="service-tag '+tc+'">'+service.regionLabel+'</span></div>'+
+      '</'+ht+'></div>'+
+      '<div class="card-bottom"><div class="trend-chart"><svg viewBox="0 0 '+(DATA_POINTS-1)+' 44" preserveAspectRatio="none">'+svg+'</svg></div></div>'+
+      '<div class="latency-display"><span class="latency-value '+lc+'">'+dv+'</span><span class="latency-unit '+lc+'">ms</span></div>'+
+      '<div class="card-detail" id="detail-'+service.id+'"><div class="detail-content">'+
+        '<div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>'+
+        '<div class="detail-item"><span class="detail-label">测速地址</span><span class="detail-value" style="font-size:11px;word-break:break-all;">'+service.testUrl+'</span></div>'+
+        '<div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>'+
+        '<div class="detail-item"><span class="detail-label">最高/最低</span><span class="detail-value" data-field="range">-- / -- ms</span></div>'+
+      '</div></div>';
+    card.addEventListener('click',function(e){ if(e.target.closest('.site-link'))return;
+      const d=document.getElementById('detail-'+service.id);
+      if(expandedCardId===service.id){ d.classList.remove('open'); expandedCardId=null; }
+      else{ if(expandedCardId){ const p=document.getElementById('detail-'+expandedCardId); if(p)p.classList.remove('open'); }
+        d.classList.add('open'); expandedCardId=service.id; updateDetail(service); }
     });
+    return card;
   }
 
-  // ==================== 数据初始化 ====================
-  function initService(config) { // 初始化单个站点的运行时数据
-    return {
-      ...config,          // 展开配置中的所有字段
-      latency: null,      // 当前延迟，null表示尚未测速/不可达
-      trendData: [],      // 趋势数据数组（初始为空，等待真实测速填充）
-      level: 'offline',   // 初始状态：离线/未测速
-      failCount: 0        // 连续失败计数
-    };
-  }
+  function updateDetail(service){ const d=document.getElementById('detail-'+service.id); if(!d)return; const data=service.trendData; if(!data.length)return;
+    const avg=Math.round(data.reduce((a,b)=>a+b,0)/data.length), mn=Math.round(Math.min(...data)), mx=Math.round(Math.max(...data)), jit=calcJitter(data).toFixed(1);
+    d.querySelector('[data-field="jitter"]').textContent=jit+' ms';
+    d.querySelector('[data-field="avg"]').textContent=avg+' ms';
+    d.querySelector('[data-field="range"]').textContent=mx+' / '+mn+' ms'; }
 
-  function getLevel(latency) { // 根据延迟值判断等级（用于颜色显示）
-    if (latency === null) return 'offline';  // 不可达：灰色
-    if (latency < 100) return 'good';        // <100ms：绿色
-    if (latency < 300) return 'warning';     // <300ms：橙色
-    return 'bad';                              // >=300ms：红色
-  }
+  function renderList(){ listContainer.innerHTML='';
+    services.forEach((s,i)=>listContainer.appendChild(renderCard(s,i)));
+    const f=document.createElement('div'); f.className='list-footer';
+    f.innerHTML='<div class="visit-stats">'+
+      '<div class="visit-stat-item"><span class="visit-stat-num" id="visitTotal">--</span><span class="visit-stat-label">总访问量</span></div>'+
+      '<div class="visit-stat-item"><span class="visit-stat-num" id="visitToday">--</span><span class="visit-stat-label">今日访问</span></div></div>'+
+      '<div class="footer-divider"></div>'+
+      '<div>共 '+services.length+' 个节点 · 真实HTTP并发测速</div>'+
+      '<div style="margin-top:2px;">点击卡片查看详情 · GitHub 可跳转官网</div>';
+    listContainer.appendChild(f); }
 
-  function calcJitter(data) { // 计算网络波动（标准差），衡量延迟的稳定性
-    if (data.length < 2) return 0; // 数据不足返回0
-    const mean = data.reduce(function(a, b) { return a + b; }, 0) / data.length; // 平均值
-    const variance = data.reduce(function(sum, val) { // 方差
-      return sum + Math.pow(val - mean, 2); // 每个值与均值差的平方和
-    }, 0) / data.length;
-    return Math.sqrt(variance); // 标准差=方差开根号
-  }
-
-  const services = serviceConfigs.map(initService); // 初始化所有站点数据
-  let expandedCardId = null;                           // 当前展开的卡片ID（null表示无展开）
-  const listContainer = document.getElementById('listContainer'); // 获取列表容器DOM
-  const toast = document.getElementById('toast');     // 获取Toast容器DOM
-
-  // ==================== 趋势线渲染 ====================
-  function generateTrendPath(data, width, height) { // 生成真实数据的折线SVG路径
-    if (data.length < 2) return ''; // 数据不足2个点返回空字符串
-    const padding = height * 0.15; // 上下内边距15%，防止线条贴边
-    const usableHeight = height - padding * 2; // 可用高度
-    const stepX = width / (data.length - 1); // 每个数据点的水平间距
-
-    const min = Math.min.apply(null, data); // 最小值
-    const max = Math.max.apply(null, data); // 最大值
-    const range = max - min || 1; // 数据范围，防止除零
-
-    const points = data.map(function(val, i) { // 将延迟值映射为SVG坐标点
-      const normalized = (val - min) / range; // 0-1归一化
-      return {
-        x: i * stepX, // X坐标：按索引均匀分布
-        y: padding + usableHeight - normalized * usableHeight // Y坐标：延迟越高越靠上
-      };
-    });
-
-    let path = 'M ' + points[0].x.toFixed(1) + ',' + points[0].y.toFixed(1); // 起始点
-    for (let i = 1; i < points.length; i++) { // 连接各点
-      path += ' L ' + points[i].x.toFixed(1) + ',' + points[i].y.toFixed(1);
-    }
-    return path;
-  }
-
-  // ==================== 数字滚动动画 ====================
-  function animateNumber(element, from, to, duration) { // 让延迟数值从旧值平滑过渡到新值
-    if (from === null) from = 0; // 首次测速从0开始
-    const startTime = performance.now(); // 动画开始时间
-    function update(currentTime) { // 每帧更新函数
-      const elapsed = currentTime - startTime; // 已流逝时间
-      const progress = Math.min(elapsed / duration, 1); // 进度0-1
-      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic缓动，先快后慢
-      element.textContent = Math.round(from + (to - from) * eased); // 更新显示数值
-      if (progress < 1) requestAnimationFrame(update); // 未完成则继续下一帧
-    }
-    requestAnimationFrame(update); // 启动动画
-  }
-
-  // ==================== 卡片渲染 ====================
-  function renderCard(service, index) { // 渲染单个服务卡片的HTML结构
-    const card = document.createElement('div'); // 创建卡片div元素
-    card.className = 'service-card'; // 设置class
-    card.dataset.id = service.id; // 设置data-id用于后续查找
-    card.style.animationDelay = (index * 0.04) + 's'; // 依次延迟入场，形成瀑布效果
-
-    const levelClass = 'latency-' + service.level; // 延迟等级CSS类名
-    const tagClass = service.region === 'domestic' ? 'tag-domestic' : 'tag-international'; // 区域标签类名
-    const pathD = generateTrendPath(service.trendData, DATA_POINTS - 1, 28); // 生成趋势线路径
-    const displayValue = service.latency === null ? '--' : Math.round(service.latency); // 显示值，null显示--
-
-    card.innerHTML = // 组装卡片HTML内容
-      '<div class="card-top">' + // 卡片顶部行开始
-        '<div class="service-icon">' + // 图标容器开始
-          '<img src="' + service.iconUrl + '" alt="' + service.name + '" onerror="this.style.display=\'none\'">' + // 官方favicon图标，加载失败则隐藏
-        '</div>' + // 图标容器结束
-        '<div class="service-info">' + // 服务信息容器开始
-          '<span class="service-name">' + service.name + '</span>' + // 服务名称
-          '<span class="service-tag ' + tagClass + '">' + service.regionLabel + '</span>' + // 区域标签
-        '</div>' + // 服务信息容器结束
-      '</div>' + // 卡片顶部行结束
-      '<div class="card-bottom">' + // 卡片底部行开始（趋势线）
-        '<div class="trend-chart">' + // 趋势线容器开始
-          '<svg viewBox="0 0 ' + (DATA_POINTS - 1) + ' 28" preserveAspectRatio="none">' + // SVG元素，拉伸填充
-            '<path class="trend-glow" d="' + pathD + '" stroke="' + service.trendColor + '"/>' + // 发光层路径
-            '<path class="trend-line" d="' + pathD + '" stroke="' + service.trendColor + '"/>' + // 主线条路径
-          '</svg>' + // SVG结束
-        '</div>' + // 趋势线容器结束
-      '</div>' + // 卡片底部行结束
-      '<div class="latency-display">' + // 延迟数值容器开始
-        '<span class="latency-value ' + levelClass + '">' + displayValue + '</span>' + // 延迟数值
-        '<span class="latency-unit ' + levelClass + '">ms</span>' + // 单位ms
-      '</div>' + // 延迟数值容器结束
-      '<div class="card-detail" id="detail-' + service.id + '">' + // 详情展开区域开始
-        '<div class="detail-content">' + // 详情内容网格开始
-          '<div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>' + // 网络波动项
-          '<div class="detail-item"><span class="detail-label">测速地址</span><span class="detail-value" style="font-size:11px;word-break:break-all;">' + service.testUrl + '</span></div>' + // 测速地址项
-          '<div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>' + // 平均延迟项
-          '<div class="detail-item"><span class="detail-label">峰值/谷值</span><span class="detail-value" data-field="range">-- / -- ms</span></div>' + // 峰值谷值项
-        '</div>' + // 详情内容网格结束
-      '</div>'; // 详情区域结束
-
-    card.addEventListener('click', function() { // 为卡片添加点击事件：展开/收起详情面板
-      const detail = document.getElementById('detail-' + service.id); // 获取当前卡片的详情元素
-      if (expandedCardId === service.id) { // 如果当前卡片已经是展开状态
-        detail.classList.remove('open'); // 移除open类，收起详情
-        expandedCardId = null; // 清空展开的卡片ID
-      } else { // 如果当前卡片未展开
-        if (expandedCardId) { // 如果有其他卡片正在展开
-          const prev = document.getElementById('detail-' + expandedCardId); // 获取之前展开的详情元素
-          if (prev) prev.classList.remove('open'); // 收起之前的卡片（同时只展开一个）
-        }
-        detail.classList.add('open'); // 展开当前卡片
-        expandedCardId = service.id; // 记录当前展开的卡片ID
-        updateDetail(service); // 更新详情数据
+  async function updateData(){ if(isUpdating)return; isUpdating=true;
+    try{ const results=await Promise.all(services.map(s=>measureLatency(s.testUrl)));
+      for(let i=0;i<services.length;i++){ const s=services[i], r=results[i], old=s.latency;
+        if(r!==null){ s.latency=r; s.failCount=0; s.trendData.push(r); if(s.trendData.length>DATA_POINTS)s.trendData.shift(); }
+        else{ s.failCount++; if(s.failCount>=3)s.latency=null; }
+        const nl=getLevel(s.latency), lc=nl!==s.level; s.level=nl;
+        const card=listContainer.querySelector('[data-id="'+s.id+'"]');
+        if(card){ if(s.trendData.length>=2){ const svg=card.querySelector('.trend-chart svg'); if(svg)svg.innerHTML=generateTrendSVG(s,DATA_POINTS-1,44); }
+          const ve=card.querySelector('.latency-value'), ue=card.querySelector('.latency-unit');
+          if(ve){ if(lc){ const c='latency-'+s.level; ve.className='latency-value '+c; if(ue)ue.className='latency-unit '+c; }
+            if(s.latency!==null)animateNumber(ve,old,s.latency,200); else ve.textContent='--'; }
+          if(expandedCardId===s.id)updateDetail(s); }
       }
-    });
-    return card; // 返回创建好的卡片元素
-  }
+    }catch(e){ console.error('测速异常:',e); } finally{ isUpdating=false; } }
 
-  function updateDetail(service) { // 更新详情面板中的统计数据
-    const detail = document.getElementById('detail-' + service.id); // 获取详情元素
-    if (!detail) return; // 如果元素不存在则直接返回
-    const data = service.trendData; // 取趋势数据数组
-    if (data.length === 0) return; // 没有数据则返回
+  let toastTimer=null;
+  function showToast(msg){ toast.textContent=msg; toast.classList.add('show'); if(toastTimer)clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),2000); }
 
-    const avg = Math.round(data.reduce(function(a, b) { return a + b; }, 0) / data.length); // 平均延迟
-    const min = Math.round(Math.min.apply(null, data)); // 最小值（谷值）
-    const max = Math.round(Math.max.apply(null, data)); // 最大值（峰值）
-    const jitter = calcJitter(data).toFixed(1); // 网络波动（标准差），保留1位小数
-
-    detail.querySelector('[data-field="jitter"]').textContent = jitter + ' ms'; // 更新网络波动显示
-    detail.querySelector('[data-field="avg"]').textContent = avg + ' ms'; // 更新平均延迟显示
-    detail.querySelector('[data-field="range"]').textContent = max + ' / ' + min + ' ms'; // 更新峰值/谷值
-  }
-
-  function renderList() { // 渲染整个列表（初始渲染用）
-    listContainer.innerHTML = ''; // 清空列表容器
-    services.forEach(function(service, index) { // 遍历所有服务
-      listContainer.appendChild(renderCard(service, index)); // 渲染每个卡片并添加到容器
-    });
-    const footer = document.createElement('div'); // 创建底部说明元素
-    footer.className = 'list-footer'; // 设置class
-    footer.textContent = '共 ' + services.length + ' 个节点 · 真实HTTP并发测速'; // 底部文字
-    listContainer.appendChild(footer); // 添加到底部
-  }
-
-  // ==================== 核心：并发测速更新 ====================
-  async function updateData() { // 使用Promise.all同时发起所有站点的测速请求（并发，而非逐个等待）
-    if (isUpdating) return; // 如果上一轮测速还没完成，跳过本轮（防止重叠）
-    isUpdating = true; // 加锁，标记正在测速中
-
-    try {
-      const results = await Promise.all( // 并发发起所有测速请求，Promise.all同时执行
-        services.map(function(service) {
-          return measureLatency(service.testUrl); // 每个站点返回一个Promise
-        })
-      );
-
-      for (let i = 0; i < services.length; i++) { // 遍历测速结果，更新每个站点的数据
-        const service = services[i]; // 当前站点
-        const result = results[i]; // 对应测速结果
-        const oldLatency = service.latency; // 保存旧延迟值用于动画
-
-        if (result !== null) { // 测速成功
-          service.latency = result; // 更新当前延迟
-          service.failCount = 0; // 重置连续失败计数
-          service.trendData.push(result); // 推入趋势数据数组
-          if (service.trendData.length > DATA_POINTS) { // 超过最大点数
-            service.trendData.shift(); // 移除最旧的数据点，实现滚动效果
-          }
-        } else { // 测速失败/超时
-          service.failCount++; // 连续失败计数+1
-          if (service.failCount >= 3) { // 连续失败3次以上才显示离线
-            service.latency = null; // 设为null，显示--
-          }
-        }
-
-        const newLevel = getLevel(service.latency); // 根据新延迟判断等级
-        const levelChanged = newLevel !== service.level; // 判断等级是否变化
-        service.level = newLevel; // 更新等级
-
-        const card = listContainer.querySelector('[data-id="' + service.id + '"]'); // 查找卡片DOM
-        if (card) {
-          if (service.trendData.length >= 2) { // 更新趋势线（数据>=2个点才更新）
-            const paths = card.querySelectorAll('.trend-line, .trend-glow'); // 获取两个path元素
-            const pathD = generateTrendPath(service.trendData, DATA_POINTS - 1, 28); // 重新生成路径
-            paths.forEach(function(p) { p.setAttribute('d', pathD); }); // 更新两个path的d属性
-          }
-
-          const valueEl = card.querySelector('.latency-value'); // 获取数值元素
-          const unitEl = card.querySelector('.latency-unit'); // 获取单位元素
-          if (valueEl) {
-            if (levelChanged) { // 如果等级发生了变化，切换颜色
-              const lc = 'latency-' + service.level; // 构造新的等级CSS类名
-              valueEl.className = 'latency-value ' + lc; // 更新数值元素class
-              if (unitEl) unitEl.className = 'latency-unit ' + lc; // 更新单位元素class
-            }
-            if (service.latency !== null) { // 有有效延迟值
-              animateNumber(valueEl, oldLatency, service.latency, 200); // 数字滚动动画，200ms
-            } else { // 离线状态
-              valueEl.textContent = '--'; // 显示--
-            }
-          }
-
-          if (expandedCardId === service.id) { // 如果当前卡片正在展开，同步更新详情数据
-            updateDetail(service);
-          }
-        }
-      }
-    } catch (err) { // 捕获异常，防止测速错误导致整个页面崩溃
-      console.error('测速异常:', err);
-    } finally {
-      isUpdating = false; // 无论成功失败都释放锁
-    }
-  }
-
-  // ==================== Toast提示 ====================
-  let toastTimer = null; // Toast定时器变量，用于清除之前的定时器
-  function showToast(message) { // 显示Toast提示函数
-    toast.textContent = message; // 设置Toast文字
-    toast.classList.add('show'); // 添加show类，显示Toast
-    if (toastTimer) clearTimeout(toastTimer); // 如果已有定时器，先清除
-    toastTimer = setTimeout(function() { // 设置新定时器，2秒后隐藏
-      toast.classList.remove('show'); // 移除show类，隐藏
-    }, 2000);
-  }
-
-  // ==================== 启动 ====================
-  renderList(); // 初始渲染列表（显示--等待首次测速）
-  showToast('开始并发测速...'); // 提示用户
-
-  updateData().then(function() { // 立即执行一次测速，然后按50ms间隔循环
-    setInterval(updateData, UPDATE_INTERVAL); // 每50ms调用一次updateData
-  });
-
-})(); // 立即执行函数结束
-</script> <!-- 脚本结束标签 -->
-</body> <!-- 主体结束 -->
-</html> <!-- 文档结束 -->
+  renderList(); reportVisit(); showToast('开始并发测速...');
+  updateData().then(()=>setInterval(updateData,UPDATE_INTERVAL));
+})();
+</script>
+</body>
+</html>
