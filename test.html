@@ -145,8 +145,8 @@
     min-width: 0; /* 最小宽度0，允许省略 */
   } /* 信息容器结束 */
   .service-name { /* 服务名称 */
-    font-size: 16px; /* 字号16px */
-    font-weight: 700; /* 粗体 */
+    font-size: 18px; /* 字号16px */
+    font-weight: 800; /* 粗体 */
     color: var(--text-primary); /* 黑色 */
     white-space: nowrap; /* 不换行 */
     overflow: hidden; /* 溢出隐藏 */
@@ -170,14 +170,14 @@
   .card-bottom { /* 卡片底部行：趋势线 */
     display: flex; /* 弹性布局 */
     align-items: center; /* 垂直居中 */
-    margin-top: 6px; /* 顶部间距6px */
-    padding-left: 50px; /* 左内边距50px，对齐图标右侧 */
+    margin-top: 3px; /* 顶部间距6px */
+    padding-left: 5px; /* 左内边距50px，对齐图标右侧 */
     position: relative; /* 相对定位 */
     z-index: 1; /* 层级1 */
   } /* 底部行结束 */
   .trend-chart { /* 趋势线容器 */
     flex: 1; /* 占满剩余宽度 */
-    height: 20px; /* 高28px */
+    height: 28px; /* 高28px */
     min-width: 0; /* 最小宽度0 */
   } /* 趋势线容器结束 */
   .trend-chart svg { /* 趋势线SVG */
@@ -188,13 +188,13 @@
   } /* SVG结束 */
   .trend-line { /* 趋势线主线条 */
     fill: none; /* 不填充 */
-    stroke-width: 0.8; /* 线宽1.8px */
+    stroke-width: 1.2; /* 线宽1.8px */
     stroke-linecap: round; /* 端点圆角 */
     stroke-linejoin: miter; /* 连接点斜接，保持尖锐 */
   } /* 主线条结束 */
   .trend-glow { /* 趋势线发光层 */
     fill: none; /* 不填充 */
-    stroke-width: 3; /* 线宽4px */
+    stroke-width: 4; /* 线宽4px */
     stroke-linecap: round; /* 端点圆角 */
     stroke-linejoin: miter; /* 连接点斜接 */
     opacity: 0.25; /* 透明度25% */
