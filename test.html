@@ -3,7 +3,7 @@
 <head> <!-- 头部区域，包含元数据、样式、脚本等 -->
 <meta charset="UTF-8"> <!-- 设置字符编码为UTF-8，支持中文防止乱码 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"> <!-- 视口设置：宽度=设备宽度，禁止缩放，适配刘海屏 -->
-<title>网络波动测试</title> <!-- 页面标题，显示在浏览器标签页 -->
+<title>网络测试工具</title> <!-- 页面标题，显示在浏览器标签页 -->
 <style> <!-- 样式表开始 -->
   * { /* 通配符选择器，选中所有元素 */
     margin: 0; /* 外边距设为0，清除浏览器默认外边距 */
@@ -22,6 +22,7 @@
     --orange: #FF9500; /* 橙色，中等延迟 */
     --red: #FF3B30; /* 红色，高延迟 */
     --blue: #007AFF; /* 蓝色，国际标签 */
+    --gray: #8E8E93; /* 灰色，离线状态 */
     --safe-top: env(safe-area-inset-top, 0px); /* 顶部安全区，适配刘海屏 */
     --safe-bottom: env(safe-area-inset-bottom, 0px); /* 底部安全区，适配底部横条 */
   } /* 变量定义结束 */
@@ -79,7 +80,7 @@
     height: 6px; /* 高6px */
     border-radius: 50%; /* 圆形 */
     background: var(--green); /* 绿色 */
-    animation: pulse 0.5s ease-in-out infinite; /* 呼吸动画，0.5秒无限循环 */
+    animation: pulse 0.05s ease-in-out infinite; /* 呼吸动画，50ms无限循环（配合50ms刷新） */
   } /* 指示灯结束 */
   @keyframes pulse { /* 呼吸动画关键帧 */
     0%, 100% { opacity: 1; transform: scale(1); } /* 开始结束：不透明，原始大小 */
@@ -132,11 +133,14 @@
     justify-content: center; /* 水平居中 */
     flex-shrink: 0; /* 不压缩 */
     overflow: hidden; /* 溢出隐藏 */
+    background: #f5f5f5; /* 默认灰色背景，图标加载前显示 */
   } /* 图标容器结束 */
-  .service-icon svg { /* 图标内SVG */
+  .service-icon img { /* 图标内的img标签（官方favicon） */
     width: 26px; /* 宽26px */
     height: 26px; /* 高26px */
-  } /* 图标SVG结束 */
+    object-fit: contain; /* 保持比例缩放，完整显示 */
+    display: block; /* 块级显示 */
+  } /* 图标img结束 */
   .service-info { /* 服务信息容器：名称+标签 */
     display: flex; /* 弹性布局 */
     align-items: center; /* 垂直居中 */
@@ -145,8 +149,8 @@
     min-width: 0; /* 最小宽度0，允许省略 */
   } /* 信息容器结束 */
   .service-name { /* 服务名称 */
-    font-size: 18px; /* 字号16px */
-    font-weight: 800; /* 粗体 */
+    font-size: 16px; /* 字号16px */
+    font-weight: 700; /* 粗体 */
     color: var(--text-primary); /* 黑色 */
     white-space: nowrap; /* 不换行 */
     overflow: hidden; /* 溢出隐藏 */
@@ -170,8 +174,8 @@
   .card-bottom { /* 卡片底部行：趋势线 */
     display: flex; /* 弹性布局 */
     align-items: center; /* 垂直居中 */
-    margin-top: 3px; /* 顶部间距6px */
-    padding-left: 5px; /* 左内边距50px，对齐图标右侧 */
+    margin-top: 6px; /* 顶部间距6px */
+    padding-left: 0px; /* 左内边距0px，趋势线从最左边开始（用户要求） */
     position: relative; /* 相对定位 */
     z-index: 1; /* 层级1 */
   } /* 底部行结束 */
@@ -188,21 +192,21 @@
   } /* SVG结束 */
   .trend-line { /* 趋势线主线条 */
     fill: none; /* 不填充 */
-    stroke-width: 1.2; /* 线宽1.8px */
+    stroke-width: 1.8; /* 线宽1.8px */
     stroke-linecap: round; /* 端点圆角 */
-    stroke-linejoin: miter; /* 连接点斜接，保持尖锐 */
+    stroke-linejoin: round; /* 连接点圆角 */
   } /* 主线条结束 */
   .trend-glow { /* 趋势线发光层 */
     fill: none; /* 不填充 */
-    stroke-width: 4; /* 线宽4px */
+    stroke-width: 2; /* 线宽4px */
     stroke-linecap: round; /* 端点圆角 */
-    stroke-linejoin: miter; /* 连接点斜接 */
+    stroke-linejoin: round; /* 连接点圆角 */
     opacity: 0.25; /* 透明度25% */
-    filter: blur(1px); /* 模糊1px，发光效果 */
+    filter: blur(0.5px); /* 模糊1px，发光效果 */
   } /* 发光层结束 */
   .latency-display { /* 延迟数值容器 */
     position: absolute; /* 绝对定位，相对于卡片 */
-    right: 16px; /* 距右14px */
+    right: 14px; /* 距右14px */
     top: 50%; /* 距顶50% */
     transform: translateY(-50%); /* 上移50%，垂直居中 */
     display: flex; /* 弹性布局 */
@@ -227,6 +231,7 @@
   .latency-good { color: var(--green); } /* 低延迟：绿色 */
   .latency-warning { color: var(--orange); } /* 中等延迟：橙色 */
   .latency-bad { color: var(--red); } /* 高延迟：红色 */
+  .latency-offline { color: var(--gray); } /* 离线：灰色 */
   .card-detail { /* 卡片详情展开区域 */
     max-height: 0; /* 最大高度0，默认收起 */
     overflow: hidden; /* 溢出隐藏 */
@@ -234,7 +239,7 @@
     margin-top: 0; /* 顶部间距0 */
   } /* 详情结束 */
   .card-detail.open { /* 详情展开状态 */
-    max-height: 140px; /* 最大高度140px */
+    max-height: 160px; /* 最大高度160px */
     margin-top: 10px; /* 顶部间距10px */
   } /* 展开状态结束 */
   .detail-content { /* 详情内容网格 */
@@ -292,263 +297,369 @@
 <div class="app-container" id="app"> <!-- 应用容器 -->
   <div class="monitor-bar"> <!-- 监控状态条 -->
     <span class="monitor-dot"></span> <!-- 呼吸指示灯 -->
-    <span>网络波动测试中</span> <!-- 状态文字 -->
+    <span>真实测速中 · 50ms 并发刷新</span> <!-- 状态文字 -->
   </div> <!-- 状态条结束 -->
   <div class="list-container" id="listContainer"></div> <!-- 列表容器，JS动态生成卡片 -->
 </div> <!-- 应用容器结束 -->
 <div class="toast" id="toast"></div> <!-- Toast容器 -->
 <script> <!-- 脚本开始 -->
-(function() { // 立即执行函数(IIFE)，创建独立作用域
-  'use strict'; // 严格模式
-  const UPDATE_INTERVAL = 100; // 刷新间隔500ms=0.5秒
-  const DATA_POINTS = 56; // 趋势线数据点数量56个
-  const TIME_STEP = 0.05; // 虚拟时间步长0.12秒，控制心跳滚动速度
-  // 服务站点配置数组
+(function() { // 立即执行函数(IIFE)，创建独立作用域，避免变量污染全局
+  'use strict'; // 严格模式，消除JS语法隐患
+
+  // ==================== 配置区 ====================
+  const UPDATE_INTERVAL = 50;     // 刷新间隔：50毫秒（用户要求，每秒20次）
+  const DATA_POINTS = 56;          // 趋势线保留的数据点数量
+  const TIMEOUT_MS = 3000;         // 单次测速超时时间：3秒
+  let isUpdating = false;           // 并发测速锁，防止上一轮未完成就开始下一轮
+
+  // 站点配置数组：每个站点包含显示信息、图标URL、测速URL
+  // iconUrl用于显示官方favicon图标（带缓存正常显示）
+  // testUrl用于测速（加时间戳防缓存，与图标显示互不干扰）
   const serviceConfigs = [
-    { // 抖音
+    { // 王者荣耀（原抖音位置）
+      id: 'wangzhe', name: '王者荣耀', region: 'domestic', regionLabel: '国内',
+      trendColor: '#81C784', // 趋势线颜色：绿色
+      iconUrl: 'https://pvp.qq.com/favicon.ico', // 官方图标：王者荣耀官网favicon
+      testUrl: 'https://pvp.qq.com/favicon.ico'  // 测速地址：加载favicon计时
+    },
+    { // 和平精英（原B站位置）
+      id: 'heping', name: '和平精英', region: 'domestic', regionLabel: '国内',
+      trendColor: '#81C784', // 趋势线颜色：绿色
+      iconUrl: 'https://gp.qq.com/favicon.ico', // 官方图标：和平精英官网favicon
+      testUrl: 'https://gp.qq.com/favicon.ico'  // 测速地址
+    },
+    { // 抖音（原微信位置）
       id: 'douyin', name: '抖音', region: 'domestic', regionLabel: '国内',
-      baseLatency: 21, heartRate: 72, amplitude: 4.5, iconBg: '#E8F0FE', trendColor: '#81C784',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><rect x="8" y="14" width="6" height="20" rx="2" fill="#1A73E8"/><rect x="21" y="8" width="6" height="26" rx="2" fill="#4285F4"/><rect x="34" y="18" width="6" height="16" rx="2" fill="#1A73E8"/></svg>'
-    },
-    { // B站
-      id: 'bilibili', name: 'B站', region: 'domestic', regionLabel: '国内',
-      baseLatency: 28, heartRate: 68, amplitude: 5.5, iconBg: '#FCE4EC', trendColor: '#81C784',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="12" width="36" height="26" rx="6" fill="#FB7299"/><circle cx="17" cy="25" r="2.5" fill="#fff"/><circle cx="31" cy="25" r="2.5" fill="#fff"/><path d="M16 6l6 6M32 6l-6 6" stroke="#FB7299" stroke-width="3" stroke-linecap="round"/></svg>'
-    },
-    { // 微信
-      id: 'wechat', name: '微信', region: 'domestic', regionLabel: '国内',
-      baseLatency: 20, heartRate: 75, amplitude: 4.0, iconBg: '#E8F5E9', trendColor: '#81C784',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><path d="M18 8C9.7 8 3 13.6 3 20.5c0 3.9 2.2 7.4 5.6 9.7L7 36l6.5-3.2c1.4.4 2.9.6 4.5.6" fill="#07C160"/><path d="M45 28.5c0-5.8-6-10.5-13.5-10.5S18 22.7 18 28.5s6 10.5 13.5 10.5c1.5 0 2.9-.2 4.2-.5L42 41l-1.2-4.2c3.2-2 5.2-5.2 5.2-8.3z" fill="#07C160"/><circle cx="13" cy="18" r="1.8" fill="#fff"/><circle cx="23" cy="18" r="1.8" fill="#fff"/><circle cx="27" cy="27" r="1.5" fill="#fff"/><circle cx="36" cy="27" r="1.5" fill="#fff"/></svg>'
+      trendColor: '#81C784', // 趋势线颜色：绿色
+      iconUrl: 'https://www.douyin.com/favicon.ico', // 官方图标：抖音官网favicon
+      testUrl: 'https://www.douyin.com/favicon.ico'  // 测速地址
     },
     { // 淘宝
       id: 'taobao', name: '淘宝', region: 'domestic', regionLabel: '国内',
-      baseLatency: 65, heartRate: 65, amplitude: 8.0, iconBg: '#FFF3E0', trendColor: '#81C784',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#FF5000"/><text x="24" y="22" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="sans-serif">淘宝</text><text x="24" y="34" text-anchor="middle" fill="#fff" font-size="7" font-weight="500" font-family="sans-serif" opacity="0.9">Taobao</text></svg>'
+      trendColor: '#81C784', // 趋势线颜色：绿色
+      iconUrl: 'https://www.taobao.com/favicon.ico', // 官方图标
+      testUrl: 'https://www.taobao.com/favicon.ico'  // 测速地址
     },
     { // Cloudflare
       id: 'cloudflare', name: 'Cloudflare', region: 'international', regionLabel: '国际',
-      baseLatency: 118, heartRate: 70, amplitude: 12.0, iconBg: '#F3E5F5', trendColor: '#FFB74D',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="26" r="14" fill="#F38020"/><path d="M16 28c0-4.4 3.6-8 8-8 3.2 0 6 1.9 7.3 4.7 2.8-.5 5 1.8 5 4.6 0 2.6-2.1 4.7-4.7 4.7H17.5c-2.5 0-4.5-2-4.5-4.5 0-2.3 1.7-4.2 3.9-4.5.1-.3.1-.6.1-.9z" fill="#fff"/></svg>'
+      trendColor: '#FFB74D', // 趋势线颜色：橙色
+      iconUrl: 'https://www.cloudflare.com/favicon.ico', // 官方图标
+      testUrl: 'https://www.cloudflare.com/favicon.ico'  // 测速地址
     },
     { // GitHub
       id: 'github', name: 'GitHub', region: 'international', regionLabel: '国际',
-      baseLatency: 294, heartRate: 88, amplitude: 22.0, iconBg: '#F5F5F5', trendColor: '#FFB74D',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><path d="M24 4C12.95 4 4 12.95 4 24c0 8.84 5.73 16.34 13.68 18.99.99.18 1.36-.43 1.36-.96v-3.37c-5.56 1.21-6.73-2.68-6.73-2.68-.91-2.31-2.22-2.92-2.22-2.92-1.81-1.24.14-1.21.14-1.21 2.01.14 3.07 2.07 3.07 2.07 1.78 3.06 4.67 2.18 5.81 1.67.18-1.3.7-2.18 1.27-2.68-4.44-.5-9.11-2.22-9.11-9.89 0-2.18.78-3.97 2.07-5.37-.21-.51-.9-2.55.2-5.32 0 0 1.68-.54 5.5 2.05a19.07 19.07 0 0110 0c3.82-2.59 5.5-2.05 5.5-2.05 1.1 2.77.41 4.81.2 5.32 1.29 1.4 2.07 3.19 2.07 5.37 0 7.69-4.68 9.39-9.13 9.88.72.62 1.36 1.84 1.36 3.71v5.5c0 .53.36 1.15 1.37.96A20.02 20.02 0 0044 24C44 12.95 35.05 4 24 4z" fill="#24292E"/></svg>'
+      trendColor: '#FFB74D', // 趋势线颜色：橙色
+      iconUrl: 'https://github.com/favicon.ico', // 官方图标
+      testUrl: 'https://github.com/favicon.ico'  // 测速地址
     },
     { // ChatGPT
       id: 'chatgpt', name: 'ChatGPT', region: 'international', regionLabel: '国际',
-      baseLatency: 420, heartRate: 96, amplitude: 35.0, iconBg: '#E8F5E9', trendColor: '#E57373',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><path d="M24 6C14.06 6 6 14.06 6 24s8.06 18 18 18 18-8.06 18-18S33.94 6 24 6zm-2.5 27.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm11.72-5.78c-.52.87-1.35 1.48-2.3 1.76l-1.18.35c-.28.08-.47.32-.47.62v1.05c0 .83-.67 1.5-1.5 1.5h-7.54c-.83 0-1.5-.67-1.5-1.5v-1.05c0-.3-.19-.54-.47-.62l-1.18-.35c-.95-.28-1.78-.89-2.3-1.76-.52-.87-.76-1.9-.66-2.95l.15-1.55c.03-.31-.02-.62-.14-.89l-.83-1.78c-.52-1.12-.47-2.43.14-3.5.61-1.07 1.68-1.82 2.92-2.05l1.42-.26c.28-.05.5-.24.6-.48l.71-1.68c.42-1 .99-1.88 1.69-2.61.7-.73 1.52-1.31 2.42-1.71.9-.4 1.86-.6 2.83-.6s1.93.2 2.83.6c.9.4 1.72.98 2.42 1.71.7.73 1.27 1.61 1.69 2.61l.71 1.68c.1.24.32.43.6.48l1.42.26c1.24.23 2.31.98 2.92 2.05.61 1.07.66 2.38.14 3.5l-.83 1.78c-.12.27-.17.58-.14.89l.15 1.55c.1 1.05-.14 2.08-.66 2.95z" fill="#10A37F"/></svg>'
+      trendColor: '#E57373', // 趋势线颜色：红色
+      iconUrl: 'https://chat.openai.com/favicon.ico', // 官方图标
+      testUrl: 'https://chat.openai.com/favicon.ico'  // 测速地址
     },
     { // Telegram
       id: 'telegram', name: 'Telegram', region: 'international', regionLabel: '国际',
-      baseLatency: 343, heartRate: 95, amplitude: 28.0, iconBg: '#E3F2FD', trendColor: '#E57373',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" fill="#0088CC"/><path d="M10 24L38 12L32 38L24 30L18 36L16 26L10 24Z" fill="#fff"/></svg>'
+      trendColor: '#E57373', // 趋势线颜色：红色
+      iconUrl: 'https://web.telegram.org/favicon.ico', // 官方图标
+      testUrl: 'https://web.telegram.org/favicon.ico'  // 测速地址
     },
     { // X
       id: 'xcom', name: 'X', region: 'international', regionLabel: '国际',
-      baseLatency: 595, heartRate: 102, amplitude: 45.0, iconBg: '#ECEFF1', trendColor: '#E57373',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#000000"/><path d="M30 10h5.5l-12 13.7L37.5 38H26l-8-10.5L9 38H3.5l12.8-14.6L6.5 10H18l7.2 9.6L30 10zm-2.3 25h3L17.5 13h-3.2L27.7 35z" fill="#fff"/></svg>'
+      trendColor: '#E57373', // 趋势线颜色：红色
+      iconUrl: 'https://x.com/favicon.ico', // 官方图标
+      testUrl: 'https://x.com/favicon.ico'  // 测速地址
     },
     { // YouTube
       id: 'youtube', name: 'YouTube', region: 'international', regionLabel: '国际',
-      baseLatency: 355, heartRate: 90, amplitude: 30.0, iconBg: '#FFEBEE', trendColor: '#E57373',
-      icon: '<svg viewBox="0 0 48 48" fill="none"><rect x="2" y="12" width="44" height="24" rx="8" fill="#FF0000"/><path d="M20 18l12 6-12 6V18z" fill="#fff"/></svg>'
+      trendColor: '#E57373', // 趋势线颜色：红色
+      iconUrl: 'https://www.youtube.com/favicon.ico', // 官方图标
+      testUrl: 'https://www.youtube.com/favicon.ico'  // 测速地址
     }
-  ]; // 服务配置数组结束
-  // ECG心电图波形函数：P波+Q波+R波+S波+T波
-  function ecgWave(t, bpm) {
-    const period = 60 / bpm; // 心跳周期时长=60/心率
-    const phase = ((t % period) + period) % period / period; // 当前相位0-1
-    function gauss(p, center, width, amp) { // 高斯函数
-      return amp * Math.exp(-Math.pow((p - center) / width, 2));
-    }
-    return gauss(phase, 0.12, 0.035, 0.12) + // P波
-           gauss(phase, 0.28, 0.012, -0.12) + // Q波
-           gauss(phase, 0.32, 0.018, 1.0) + // R波（主峰）
-           gauss(phase, 0.37, 0.016, -0.28) + // S波
-           gauss(phase, 0.58, 0.06, 0.22); // T波
-  }
-  // 初始化服务数据
-  function initService(config) {
-    const data = []; // 趋势数据数组
-    const phaseOffset = Math.random() * (60 / config.heartRate); // 随机相位偏移
-    for (let i = 0; i < DATA_POINTS; i++) { // 生成56个数据点
-      const t = -((DATA_POINTS - 1 - i) * TIME_STEP) + phaseOffset; // 从过去到现在的时间
-      data.push(config.baseLatency + ecgWave(t, config.heartRate) * config.amplitude); // 延迟值=基准+波形*振幅
-    }
-    return { ...config, latency: config.baseLatency, trendData: data, virtualTime: phaseOffset, level: getLevel(config.baseLatency) };
-  }
-  // 判断延迟等级
-  function getLevel(latency) {
-    if (latency < 100) return 'good'; // <100ms良好
-    if (latency < 300) return 'warning'; // <300ms警告
-    return 'bad'; // >=300ms差
-  }
-  // 计算网络波动（标准差）
-  function calcJitter(data) {
-    const mean = data.reduce(function(a, b) { return a + b; }, 0) / data.length; // 平均值
-    const variance = data.reduce(function(sum, val) { return sum + Math.pow(val - mean, 2); }, 0) / data.length; // 方差
-    return Math.sqrt(variance); // 标准差
-  }
-  const services = serviceConfigs.map(initService); // 初始化所有服务
-  let expandedCardId = null; // 当前展开的卡片ID
-  const listContainer = document.getElementById('listContainer'); // 列表容器
-  const toast = document.getElementById('toast'); // Toast容器
-  // 生成心跳折线SVG路径
-  function generateHeartbeatPath(data, width, height) {
-    if (data.length < 2) return '';
-    const padding = height * 0.15; // 上下内边距15%
-    const usableHeight = height - padding * 2; // 可用高度
-    const stepX = width / (data.length - 1); // 水平间距
-    const sorted = data.slice().sort(function(a, b) { return a - b; }); // 排序
-    const median = sorted[Math.floor(sorted.length / 2)]; // 中位数作为基线
-    const range = Math.max(median * 0.25, 8); // 显示范围
-    const min = median - range * 0.4; // 最小值
-    const max = median + range; // 最大值
-    const points = data.map(function(val, i) { // 映射为坐标点
-      return { x: i * stepX, y: padding + usableHeight - Math.max(0, Math.min(usableHeight, ((val - min) / (max - min)) * usableHeight)) };
+  ]; // 站点配置数组结束
+
+  // ==================== 真实测速核心函数 ====================
+  // 用Image对象加载目标站点的favicon.ico，记录请求耗时作为网络延迟
+  // 原理：图片加载不受同源策略限制，通用性最强；加时间戳防止浏览器缓存
+  function measureLatency(url) {
+    return new Promise(function(resolve) { // 返回Promise，支持异步调用
+      const start = performance.now();      // 记录开始时间（高精度计时器）
+      const img = new Image();               // 创建Image对象用于加载图片
+      let settled = false;                   // 完成标志，防止onload和onerror重复触发
+
+      img.onload = function() { // 加载成功回调
+        if (settled) return;    // 已完成则忽略
+        settled = true;          // 标记已完成
+        resolve(performance.now() - start); // 返回耗时（毫秒）
+      };
+
+      img.onerror = function() { // 加载失败回调（跨域/404/网络不通都会触发）
+        if (settled) return;     // 已完成则忽略
+        settled = true;           // 标记已完成
+        const elapsed = performance.now() - start; // 计算已耗时
+        resolve(elapsed > 50 ? elapsed : null); // 耗时>50ms认为有真实网络交互，否则视为不可达
+      };
+
+      img.src = url + '?t=' + Date.now() + Math.random(); // 设置图片URL，加时间戳+随机数防缓存
+
+      setTimeout(function() { // 超时保护：超过TIMEOUT_MS未完成则视为超时
+        if (settled) return;  // 已完成则忽略
+        settled = true;        // 标记已完成
+        resolve(null);         // 返回null表示超时/不可达
+      }, TIMEOUT_MS);
     });
+  }
+
+  // ==================== 数据初始化 ====================
+  function initService(config) { // 初始化单个站点的运行时数据
+    return {
+      ...config,          // 展开配置中的所有字段
+      latency: null,      // 当前延迟，null表示尚未测速/不可达
+      trendData: [],      // 趋势数据数组（初始为空，等待真实测速填充）
+      level: 'offline',   // 初始状态：离线/未测速
+      failCount: 0        // 连续失败计数
+    };
+  }
+
+  function getLevel(latency) { // 根据延迟值判断等级（用于颜色显示）
+    if (latency === null) return 'offline';  // 不可达：灰色
+    if (latency < 100) return 'good';        // <100ms：绿色
+    if (latency < 300) return 'warning';     // <300ms：橙色
+    return 'bad';                              // >=300ms：红色
+  }
+
+  function calcJitter(data) { // 计算网络波动（标准差），衡量延迟的稳定性
+    if (data.length < 2) return 0; // 数据不足返回0
+    const mean = data.reduce(function(a, b) { return a + b; }, 0) / data.length; // 平均值
+    const variance = data.reduce(function(sum, val) { // 方差
+      return sum + Math.pow(val - mean, 2); // 每个值与均值差的平方和
+    }, 0) / data.length;
+    return Math.sqrt(variance); // 标准差=方差开根号
+  }
+
+  const services = serviceConfigs.map(initService); // 初始化所有站点数据
+  let expandedCardId = null;                           // 当前展开的卡片ID（null表示无展开）
+  const listContainer = document.getElementById('listContainer'); // 获取列表容器DOM
+  const toast = document.getElementById('toast');     // 获取Toast容器DOM
+
+  // ==================== 趋势线渲染 ====================
+  function generateTrendPath(data, width, height) { // 生成真实数据的折线SVG路径
+    if (data.length < 2) return ''; // 数据不足2个点返回空字符串
+    const padding = height * 0.15; // 上下内边距15%，防止线条贴边
+    const usableHeight = height - padding * 2; // 可用高度
+    const stepX = width / (data.length - 1); // 每个数据点的水平间距
+
+    const min = Math.min.apply(null, data); // 最小值
+    const max = Math.max.apply(null, data); // 最大值
+    const range = max - min || 1; // 数据范围，防止除零
+
+    const points = data.map(function(val, i) { // 将延迟值映射为SVG坐标点
+      const normalized = (val - min) / range; // 0-1归一化
+      return {
+        x: i * stepX, // X坐标：按索引均匀分布
+        y: padding + usableHeight - normalized * usableHeight // Y坐标：延迟越高越靠上
+      };
+    });
+
     let path = 'M ' + points[0].x.toFixed(1) + ',' + points[0].y.toFixed(1); // 起始点
     for (let i = 1; i < points.length; i++) { // 连接各点
       path += ' L ' + points[i].x.toFixed(1) + ',' + points[i].y.toFixed(1);
     }
     return path;
   }
-  // 数字滚动动画
-  function animateNumber(element, from, to, duration) {
-    const startTime = performance.now(); // 开始时间
-    function update(currentTime) {
+
+  // ==================== 数字滚动动画 ====================
+  function animateNumber(element, from, to, duration) { // 让延迟数值从旧值平滑过渡到新值
+    if (from === null) from = 0; // 首次测速从0开始
+    const startTime = performance.now(); // 动画开始时间
+    function update(currentTime) { // 每帧更新函数
       const elapsed = currentTime - startTime; // 已流逝时间
-      const progress = Math.min(elapsed / duration, 1); // 进度
-      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic缓动
-      element.textContent = Math.round(from + (to - from) * eased); // 更新数值
-      if (progress < 1) requestAnimationFrame(update); // 继续动画
+      const progress = Math.min(elapsed / duration, 1); // 进度0-1
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic缓动，先快后慢
+      element.textContent = Math.round(from + (to - from) * eased); // 更新显示数值
+      if (progress < 1) requestAnimationFrame(update); // 未完成则继续下一帧
     }
-    requestAnimationFrame(update); // 启动
+    requestAnimationFrame(update); // 启动动画
   }
-  // 渲染单个卡片
-  function renderCard(service, index) {
-    const card = document.createElement('div'); // 创建卡片元素
-    card.className = 'service-card';
-    card.dataset.id = service.id;
-    card.style.animationDelay = (index * 0.04) + 's'; // 依次延迟入场
-    const levelClass = 'latency-' + service.level;
-    const tagClass = service.region === 'domestic' ? 'tag-domestic' : 'tag-international';
-    const pathD = generateHeartbeatPath(service.trendData, DATA_POINTS - 1, 28); // 生成趋势线
-    card.innerHTML =
-      '<div class="card-top">' +
-        '<div class="service-icon" style="background:' + service.iconBg + '">' + service.icon + '</div>' +
-        '<div class="service-info">' +
-          '<span class="service-name">' + service.name + '</span>' +
-          '<span class="service-tag ' + tagClass + '">' + service.regionLabel + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="card-bottom">' +
-        '<div class="trend-chart">' +
-          '<svg viewBox="0 0 ' + (DATA_POINTS - 1) + ' 28" preserveAspectRatio="none">' +
-            '<path class="trend-glow" d="' + pathD + '" stroke="' + service.trendColor + '"/>' +
-            '<path class="trend-line" d="' + pathD + '" stroke="' + service.trendColor + '"/>' +
-          '</svg>' +
-        '</div>' +
-      '</div>' +
-      '<div class="latency-display">' +
-        '<span class="latency-value ' + levelClass + '">' + Math.round(service.latency) + '</span>' +
-        '<span class="latency-unit ' + levelClass + '">ms</span>' +
-      '</div>' +
-      '<div class="card-detail" id="detail-' + service.id + '">' +
-        '<div class="detail-content">' +
-          '<div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>' +
-          '<div class="detail-item"><span class="detail-label">心率</span><span class="detail-value">' + service.heartRate + ' bpm</span></div>' +
-          '<div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>' +
-          '<div class="detail-item"><span class="detail-label">峰值/谷值</span><span class="detail-value" data-field="range">-- / -- ms</span></div>' +
-        '</div>' +
-      '</div>';
-    card.addEventListener('click', function() { // 点击展开/收起详情
-      const detail = document.getElementById('detail-' + service.id);
-      if (expandedCardId === service.id) {
-        detail.classList.remove('open');
-        expandedCardId = null;
-      } else {
-        if (expandedCardId) {
-          const prev = document.getElementById('detail-' + expandedCardId);
-          if (prev) prev.classList.remove('open');
+
+  // ==================== 卡片渲染 ====================
+  function renderCard(service, index) { // 渲染单个服务卡片的HTML结构
+    const card = document.createElement('div'); // 创建卡片div元素
+    card.className = 'service-card'; // 设置class
+    card.dataset.id = service.id; // 设置data-id用于后续查找
+    card.style.animationDelay = (index * 0.04) + 's'; // 依次延迟入场，形成瀑布效果
+
+    const levelClass = 'latency-' + service.level; // 延迟等级CSS类名
+    const tagClass = service.region === 'domestic' ? 'tag-domestic' : 'tag-international'; // 区域标签类名
+    const pathD = generateTrendPath(service.trendData, DATA_POINTS - 1, 28); // 生成趋势线路径
+    const displayValue = service.latency === null ? '--' : Math.round(service.latency); // 显示值，null显示--
+
+    card.innerHTML = // 组装卡片HTML内容
+      '<div class="card-top">' + // 卡片顶部行开始
+        '<div class="service-icon">' + // 图标容器开始
+          '<img src="' + service.iconUrl + '" alt="' + service.name + '" onerror="this.style.display=\'none\'">' + // 官方favicon图标，加载失败则隐藏
+        '</div>' + // 图标容器结束
+        '<div class="service-info">' + // 服务信息容器开始
+          '<span class="service-name">' + service.name + '</span>' + // 服务名称
+          '<span class="service-tag ' + tagClass + '">' + service.regionLabel + '</span>' + // 区域标签
+        '</div>' + // 服务信息容器结束
+      '</div>' + // 卡片顶部行结束
+      '<div class="card-bottom">' + // 卡片底部行开始（趋势线）
+        '<div class="trend-chart">' + // 趋势线容器开始
+          '<svg viewBox="0 0 ' + (DATA_POINTS - 1) + ' 28" preserveAspectRatio="none">' + // SVG元素，拉伸填充
+            '<path class="trend-glow" d="' + pathD + '" stroke="' + service.trendColor + '"/>' + // 发光层路径
+            '<path class="trend-line" d="' + pathD + '" stroke="' + service.trendColor + '"/>' + // 主线条路径
+          '</svg>' + // SVG结束
+        '</div>' + // 趋势线容器结束
+      '</div>' + // 卡片底部行结束
+      '<div class="latency-display">' + // 延迟数值容器开始
+        '<span class="latency-value ' + levelClass + '">' + displayValue + '</span>' + // 延迟数值
+        '<span class="latency-unit ' + levelClass + '">ms</span>' + // 单位ms
+      '</div>' + // 延迟数值容器结束
+      '<div class="card-detail" id="detail-' + service.id + '">' + // 详情展开区域开始
+        '<div class="detail-content">' + // 详情内容网格开始
+          '<div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>' + // 网络波动项
+          '<div class="detail-item"><span class="detail-label">测速地址</span><span class="detail-value" style="font-size:11px;word-break:break-all;">' + service.testUrl + '</span></div>' + // 测速地址项
+          '<div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>' + // 平均延迟项
+          '<div class="detail-item"><span class="detail-label">峰值/谷值</span><span class="detail-value" data-field="range">-- / -- ms</span></div>' + // 峰值谷值项
+        '</div>' + // 详情内容网格结束
+      '</div>'; // 详情区域结束
+
+    card.addEventListener('click', function() { // 为卡片添加点击事件：展开/收起详情面板
+      const detail = document.getElementById('detail-' + service.id); // 获取当前卡片的详情元素
+      if (expandedCardId === service.id) { // 如果当前卡片已经是展开状态
+        detail.classList.remove('open'); // 移除open类，收起详情
+        expandedCardId = null; // 清空展开的卡片ID
+      } else { // 如果当前卡片未展开
+        if (expandedCardId) { // 如果有其他卡片正在展开
+          const prev = document.getElementById('detail-' + expandedCardId); // 获取之前展开的详情元素
+          if (prev) prev.classList.remove('open'); // 收起之前的卡片（同时只展开一个）
         }
-        detail.classList.add('open');
-        expandedCardId = service.id;
-        updateDetail(service);
+        detail.classList.add('open'); // 展开当前卡片
+        expandedCardId = service.id; // 记录当前展开的卡片ID
+        updateDetail(service); // 更新详情数据
       }
     });
-    return card;
+    return card; // 返回创建好的卡片元素
   }
-  // 更新详情数据
-  function updateDetail(service) {
-    const detail = document.getElementById('detail-' + service.id);
-    if (!detail) return;
-    const data = service.trendData;
-    const avg = Math.round(data.reduce(function(a, b) { return a + b; }, 0) / data.length);
-    const min = Math.round(Math.min.apply(null, data));
-    const max = Math.round(Math.max.apply(null, data));
-    const jitter = calcJitter(data).toFixed(1);
-    detail.querySelector('[data-field="jitter"]').textContent = jitter + ' ms';
-    detail.querySelector('[data-field="avg"]').textContent = avg + ' ms';
-    detail.querySelector('[data-field="range"]').textContent = max + ' / ' + min + ' ms';
+
+  function updateDetail(service) { // 更新详情面板中的统计数据
+    const detail = document.getElementById('detail-' + service.id); // 获取详情元素
+    if (!detail) return; // 如果元素不存在则直接返回
+    const data = service.trendData; // 取趋势数据数组
+    if (data.length === 0) return; // 没有数据则返回
+
+    const avg = Math.round(data.reduce(function(a, b) { return a + b; }, 0) / data.length); // 平均延迟
+    const min = Math.round(Math.min.apply(null, data)); // 最小值（谷值）
+    const max = Math.round(Math.max.apply(null, data)); // 最大值（峰值）
+    const jitter = calcJitter(data).toFixed(1); // 网络波动（标准差），保留1位小数
+
+    detail.querySelector('[data-field="jitter"]').textContent = jitter + ' ms'; // 更新网络波动显示
+    detail.querySelector('[data-field="avg"]').textContent = avg + ' ms'; // 更新平均延迟显示
+    detail.querySelector('[data-field="range"]').textContent = max + ' / ' + min + ' ms'; // 更新峰值/谷值
   }
-  // 渲染整个列表
-  function renderList() {
-    listContainer.innerHTML = '';
-    services.forEach(function(service, index) {
-      listContainer.appendChild(renderCard(service, index));
+
+  function renderList() { // 渲染整个列表（初始渲染用）
+    listContainer.innerHTML = ''; // 清空列表容器
+    services.forEach(function(service, index) { // 遍历所有服务
+      listContainer.appendChild(renderCard(service, index)); // 渲染每个卡片并添加到容器
     });
-    const footer = document.createElement('div');
-    footer.className = 'list-footer';
-    footer.textContent = '共 ' + services.length + ' 个节点 · 心电监护模式';
-    listContainer.appendChild(footer);
+    const footer = document.createElement('div'); // 创建底部说明元素
+    footer.className = 'list-footer'; // 设置class
+    footer.textContent = '共 ' + services.length + ' 个节点 · 真实HTTP并发测速'; // 底部文字
+    listContainer.appendChild(footer); // 添加到底部
   }
-  // 实时数据更新，每0.5秒调用
-  function updateData() {
-    services.forEach(function(service) {
-      service.virtualTime += TIME_STEP; // 虚拟时间前进
-      const wave = ecgWave(service.virtualTime, service.heartRate); // 计算波形值
-      const newLatency = service.baseLatency + wave * service.amplitude; // 新延迟值
-      const oldLatency = service.latency;
-      service.latency = newLatency;
-      service.trendData.shift(); // 移除最旧数据
-      service.trendData.push(newLatency); // 添加新数据，实现滚动
-      const newLevel = getLevel(service.baseLatency);
-      const levelChanged = newLevel !== service.level;
-      service.level = newLevel;
-      const card = listContainer.querySelector('[data-id="' + service.id + '"]');
-      if (card) {
-        const paths = card.querySelectorAll('.trend-line, .trend-glow');
-        const pathD = generateHeartbeatPath(service.trendData, DATA_POINTS - 1, 28);
-        paths.forEach(function(p) { p.setAttribute('d', pathD); }); // 更新趋势线
-        const valueEl = card.querySelector('.latency-value');
-        const unitEl = card.querySelector('.latency-unit');
-        if (valueEl) {
-          if (levelChanged) {
-            var lc = 'latency-' + service.level;
-            valueEl.className = 'latency-value ' + lc;
-            if (unitEl) unitEl.className = 'latency-unit ' + lc;
+
+  // ==================== 核心：并发测速更新 ====================
+  async function updateData() { // 使用Promise.all同时发起所有站点的测速请求（并发，而非逐个等待）
+    if (isUpdating) return; // 如果上一轮测速还没完成，跳过本轮（防止重叠）
+    isUpdating = true; // 加锁，标记正在测速中
+
+    try {
+      const results = await Promise.all( // 并发发起所有测速请求，Promise.all同时执行
+        services.map(function(service) {
+          return measureLatency(service.testUrl); // 每个站点返回一个Promise
+        })
+      );
+
+      for (let i = 0; i < services.length; i++) { // 遍历测速结果，更新每个站点的数据
+        const service = services[i]; // 当前站点
+        const result = results[i]; // 对应测速结果
+        const oldLatency = service.latency; // 保存旧延迟值用于动画
+
+        if (result !== null) { // 测速成功
+          service.latency = result; // 更新当前延迟
+          service.failCount = 0; // 重置连续失败计数
+          service.trendData.push(result); // 推入趋势数据数组
+          if (service.trendData.length > DATA_POINTS) { // 超过最大点数
+            service.trendData.shift(); // 移除最旧的数据点，实现滚动效果
           }
-          animateNumber(valueEl, oldLatency, newLatency, 300); // 数字滚动动画
+        } else { // 测速失败/超时
+          service.failCount++; // 连续失败计数+1
+          if (service.failCount >= 3) { // 连续失败3次以上才显示离线
+            service.latency = null; // 设为null，显示--
+          }
         }
-        if (expandedCardId === service.id) {
-          updateDetail(service); // 同步更新详情
+
+        const newLevel = getLevel(service.latency); // 根据新延迟判断等级
+        const levelChanged = newLevel !== service.level; // 判断等级是否变化
+        service.level = newLevel; // 更新等级
+
+        const card = listContainer.querySelector('[data-id="' + service.id + '"]'); // 查找卡片DOM
+        if (card) {
+          if (service.trendData.length >= 2) { // 更新趋势线（数据>=2个点才更新）
+            const paths = card.querySelectorAll('.trend-line, .trend-glow'); // 获取两个path元素
+            const pathD = generateTrendPath(service.trendData, DATA_POINTS - 1, 28); // 重新生成路径
+            paths.forEach(function(p) { p.setAttribute('d', pathD); }); // 更新两个path的d属性
+          }
+
+          const valueEl = card.querySelector('.latency-value'); // 获取数值元素
+          const unitEl = card.querySelector('.latency-unit'); // 获取单位元素
+          if (valueEl) {
+            if (levelChanged) { // 如果等级发生了变化，切换颜色
+              const lc = 'latency-' + service.level; // 构造新的等级CSS类名
+              valueEl.className = 'latency-value ' + lc; // 更新数值元素class
+              if (unitEl) unitEl.className = 'latency-unit ' + lc; // 更新单位元素class
+            }
+            if (service.latency !== null) { // 有有效延迟值
+              animateNumber(valueEl, oldLatency, service.latency, 200); // 数字滚动动画，200ms
+            } else { // 离线状态
+              valueEl.textContent = '--'; // 显示--
+            }
+          }
+
+          if (expandedCardId === service.id) { // 如果当前卡片正在展开，同步更新详情数据
+            updateDetail(service);
+          }
         }
       }
-    });
+    } catch (err) { // 捕获异常，防止测速错误导致整个页面崩溃
+      console.error('测速异常:', err);
+    } finally {
+      isUpdating = false; // 无论成功失败都释放锁
+    }
   }
-  let toastTimer = null;
-  function showToast(message) { // 显示Toast
-    toast.textContent = message;
-    toast.classList.add('show');
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2000);
+
+  // ==================== Toast提示 ====================
+  let toastTimer = null; // Toast定时器变量，用于清除之前的定时器
+  function showToast(message) { // 显示Toast提示函数
+    toast.textContent = message; // 设置Toast文字
+    toast.classList.add('show'); // 添加show类，显示Toast
+    if (toastTimer) clearTimeout(toastTimer); // 如果已有定时器，先清除
+    toastTimer = setTimeout(function() { // 设置新定时器，2秒后隐藏
+      toast.classList.remove('show'); // 移除show类，隐藏
+    }, 2000);
   }
-  renderList(); // 初始渲染
-  setInterval(updateData, UPDATE_INTERVAL); // 每0.5秒更新数据
-})(); // IIFE结束
-</script>
-</body>
-</html>
+
+  // ==================== 启动 ====================
+  renderList(); // 初始渲染列表（显示--等待首次测速）
+  showToast('测速启动中...'); // 提示用户
+
+  updateData().then(function() { // 立即执行一次测速，然后按50ms间隔循环
+    setInterval(updateData, UPDATE_INTERVAL); // 每50ms调用一次updateData
+  });
+
+})(); // 立即执行函数结束
+</script> <!-- 脚本结束标签 -->
+</body> <!-- 主体结束 -->
+</html> <!-- 文档结束 -->
