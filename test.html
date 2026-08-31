@@ -91,11 +91,11 @@
   .tag-domestic { color: var(--green); background: rgba(52,199,89,0.12); }
   .tag-international { color: var(--blue); background: rgba(0,122,255,0.12); }
   /* 渐变面积趋势线 */
-  .card-bottom { display: flex; align-items: flex-end; margin-top: 1px; padding-left: 0; position: relative; z-index: 1; height: 44px; }
+  .card-bottom { display: flex; align-items: flex-end; margin-top: 8px; padding-left: 0; position: relative; z-index: 1; height: 44px; }
   .trend-chart { flex: 1; height: 44px; min-width: 0; }
   .trend-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .trend-area { stroke: none; }
-  .trend-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .trend-line { fill: none; stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
   .trend-dot { stroke: #fff; stroke-width: 2; }
   /* 延迟数值 */
   .latency-display { position: absolute; right: 14px; top: 28px; display: flex; align-items: baseline; z-index: 3; }
@@ -148,7 +148,7 @@
       <div class="time-line"><div class="ip-icon">⏰</div><span class="label">北京时间</span><span class="value" id="nowTime">--</span></div>
     </div>
   </div>
-  <div class="monitor-bar"><span class="monitor-dot"></span><span>真实测速中</span></div>
+  <div class="monitor-bar"><span class="monitor-dot"></span><span>真实测速中 · 50ms 并发刷新</span></div>
   <div class="list-container" id="listContainer"></div>
 </div>
 <div class="toast" id="toast"></div>
@@ -210,7 +210,7 @@
   let expandedCardId=null;
   const listContainer=document.getElementById('listContainer'), toast=document.getElementById('toast');
 
-  // 渐变面积趋势线（平滑曲线+渐变填充+末端数据点）
+  // 渐变面积趋势线（平滑曲线+渐变填充+末端数据点，线宽1px）
   function generateTrendSVG(service, width, height){
     const data=service.trendData; if(data.length<2)return '';
     const pad=height*0.1, uh=height-pad*2, sx=width/(data.length-1);
@@ -224,7 +224,7 @@
       '<stop offset="0%" stop-color="'+service.trendColor+'" stop-opacity="0.35"/>'+
       '<stop offset="100%" stop-color="'+service.trendColor+'" stop-opacity="0"/></linearGradient></defs>'+
       '<path class="trend-area" d="'+ap+'" fill="url(#'+gid+')"/>'+
-      '<path class="trend-line" d="'+lp+'" stroke="'+service.trendColor+'"/>'+
+      '<path class="trend-line" d="'+lp+'" stroke="'+service.trendColor+'" stroke-width="1"/>'+
       '<circle cx="'+last.x.toFixed(1)+'" cy="'+last.y.toFixed(1)+'" r="6" fill="'+service.trendColor+'" opacity="0.25"/>'+
       '<circle class="trend-dot" cx="'+last.x.toFixed(1)+'" cy="'+last.y.toFixed(1)+'" r="3.5" fill="'+service.trendColor+'"/>';
   }
@@ -248,7 +248,7 @@
         '<div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>'+
         '<div class="detail-item"><span class="detail-label">测速地址</span><span class="detail-value" style="font-size:11px;word-break:break-all;">'+service.testUrl+'</span></div>'+
         '<div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>'+
-        '<div class="detail-item"><span class="detail-label">最高/最低</span><span class="detail-value" data-field="range">-- / -- ms</span></div>'+
+        '<div class="detail-item"><span class="detail-label">峰值/谷值</span><span class="detail-value" data-field="range">-- / -- ms</span></div>'+
       '</div></div>';
     card.addEventListener('click',function(e){ if(e.target.closest('.site-link'))return;
       const d=document.getElementById('detail-'+service.id);
