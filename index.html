@@ -262,6 +262,8 @@ button:active {
     // 仅用于页面显示的计算函数，原始入参不会被修改
 function calcShowTotal(originVal) {
   const bias = 235684;
+     
+document.getElementById("todayVisit").textContent = data.today;document.getElementById("totalVisit").textContent = data.total;
   // 做空值兼容，防止后端返回 null / undefined 报错
   if (originVal == null) return bias;
   return Number(originVal) + bias;
