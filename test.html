@@ -1,0 +1,554 @@
+<!DOCTYPE html> <!-- 声明文档类型为HTML5，告诉浏览器使用HTML5标准解析 -->
+<html lang="zh-CN"> <!-- 根元素，lang属性声明页面语言为简体中文 -->
+<head> <!-- 头部区域，包含元数据、样式、脚本等 -->
+<meta charset="UTF-8"> <!-- 设置字符编码为UTF-8，支持中文防止乱码 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"> <!-- 视口设置：宽度=设备宽度，禁止缩放，适配刘海屏 -->
+<title>网络波动测试</title> <!-- 页面标题，显示在浏览器标签页 -->
+<style> <!-- 样式表开始 -->
+  * { /* 通配符选择器，选中所有元素 */
+    margin: 0; /* 外边距设为0，清除浏览器默认外边距 */
+    padding: 0; /* 内边距设为0，清除浏览器默认内边距 */
+    box-sizing: border-box; /* 盒模型设为border-box，宽高包含padding和border */
+    -webkit-tap-highlight-color: transparent; /* 移动端点击高亮设为透明，去掉灰色闪烁 */
+  } /* 通配符样式结束 */
+  :root { /* 根伪类，定义全局CSS变量 */
+    --bg: #F2F2F7; /* 背景色变量，iOS浅灰色 */
+    --card-bg: #FFFFFF; /* 卡片背景色，白色 */
+    --card-border: #E5E5EA; /* 卡片边框色，浅灰 */
+    --text-primary: #000000; /* 主要文字色，黑色 */
+    --text-secondary: #3C3C43; /* 次要文字色，深灰 */
+    --text-tertiary: #8E8E93; /* 辅助文字色，中灰 */
+    --green: #34C759; /* 绿色，低延迟状态 */
+    --orange: #FF9500; /* 橙色，中等延迟 */
+    --red: #FF3B30; /* 红色，高延迟 */
+    --blue: #007AFF; /* 蓝色，国际标签 */
+    --safe-top: env(safe-area-inset-top, 0px); /* 顶部安全区，适配刘海屏 */
+    --safe-bottom: env(safe-area-inset-bottom, 0px); /* 底部安全区，适配底部横条 */
+  } /* 变量定义结束 */
+  html, body { /* 选中html和body */
+    height: 100%; /* 高度100%，占满视口 */
+    overflow: hidden; /* 溢出隐藏，滚动由内部列表管理 */
+  } /* html和body样式结束 */
+  body { /* body全局样式 */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; /* 字体栈：苹果字体优先，回退中文字体 */
+    background: var(--bg); /* 背景色使用变量 */
+    color: var(--text-primary); /* 文字颜色使用变量 */
+    font-size: 17px; /* 基础字号17px，iOS标准正文字号 */
+    line-height: 1.4; /* 行高1.4倍 */
+    -webkit-font-smoothing: antialiased; /* 字体抗锯齿 */
+  } /* body样式结束 */
+  .app-container { /* 应用最外层容器 */
+    width: 100%; /* 宽度100% */
+    max-width: 430px; /* 最大宽度430px，模拟手机宽度，桌面端居中 */
+    height: 100vh; /* 高度100视口高度 */
+    height: 100dvh; /* 高度100动态视口高度，适配移动端地址栏伸缩 */
+    margin: 0 auto; /* 左右自动，水平居中 */
+    background: var(--bg); /* 背景色 */
+    position: relative; /* 相对定位，作为内部绝对定位参照 */
+    overflow: hidden; /* 溢出隐藏 */
+    display: flex; /* 弹性布局 */
+    flex-direction: column; /* 子元素垂直排列 */
+  } /* 应用容器结束 */
+  @media (min-width: 431px) { /* 媒体查询：屏幕>=431px（桌面端） */
+    body { /* 桌面端body */
+      background: #E5E5EA; /* 背景色稍深，突出手机容器 */
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      justify-content: center; /* 水平居中 */
+    } /* 桌面端body结束 */
+    .app-container { /* 桌面端应用容器 */
+      height: 90vh; /* 高度90视口高度 */
+      max-height: 932px; /* 最大高度932px */
+      border-radius: 40px; /* 圆角40px，模拟手机外观 */
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05); /* 阴影：大阴影+细边框 */
+    } /* 桌面端容器结束 */
+  } /* 媒体查询结束 */
+  .monitor-bar { /* 顶部监控状态条 */
+    display: flex; /* 弹性布局 */
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+    gap: 6px; /* 子元素间距6px */
+    padding: 10px 16px 6px; /* 内边距：上10，左右16，下6 */
+    font-size: 12px; /* 字号12px */
+    color: var(--text-tertiary); /* 文字灰色 */
+    font-weight: 500; /* 字重500 */
+    flex-shrink: 0; /* 不允许被压缩 */
+  } /* 状态条结束 */
+  .monitor-dot { /* 呼吸指示灯圆点 */
+    width: 6px; /* 宽6px */
+    height: 6px; /* 高6px */
+    border-radius: 50%; /* 圆形 */
+    background: var(--green); /* 绿色 */
+    animation: pulse 0.5s ease-in-out infinite; /* 呼吸动画，0.5秒无限循环 */
+  } /* 指示灯结束 */
+  @keyframes pulse { /* 呼吸动画关键帧 */
+    0%, 100% { opacity: 1; transform: scale(1); } /* 开始结束：不透明，原始大小 */
+    50% { opacity: 0.3; transform: scale(0.7); } /* 中间：半透明，缩小70% */
+  } /* 呼吸动画结束 */
+  .list-container { /* 列表容器，可滚动区域 */
+    flex: 1; /* 占满剩余空间 */
+    overflow-y: auto; /* 垂直溢出自动滚动 */
+    overflow-x: hidden; /* 水平溢出隐藏 */
+    -webkit-overflow-scrolling: touch; /* iOS惯性滚动 */
+    padding: 4px 14px calc(24px + var(--safe-bottom)); /* 内边距，底部含安全区 */
+    overscroll-behavior: contain; /* 防止滚动穿透 */
+  } /* 列表容器结束 */
+  .list-container::-webkit-scrollbar { /* 列表滚动条 */
+    display: none; /* 隐藏滚动条 */
+  } /* 滚动条结束 */
+  .service-card { /* 服务卡片 */
+    background: var(--card-bg); /* 白色背景 */
+    border: 1px solid var(--card-border); /* 1px浅灰边框 */
+    border-radius: 16px; /* 圆角16px */
+    padding: 12px 14px 10px; /* 内边距 */
+    margin-bottom: 10px; /* 底部间距10px */
+    position: relative; /* 相对定位 */
+    overflow: hidden; /* 溢出隐藏 */
+    transition: transform 0.15s, box-shadow 0.15s; /* 过渡动画 */
+    cursor: pointer; /* 手型指针，表示可点击 */
+    animation: cardIn 0.4s ease-out both; /* 入场动画 */
+    min-height: 82px; /* 最小高度82px */
+  } /* 卡片结束 */
+  .service-card:active { /* 卡片按下状态 */
+    transform: scale(0.98); /* 缩小98%，按压效果 */
+  } /* 按下状态结束 */
+  @keyframes cardIn { /* 卡片入场动画 */
+    from { opacity: 0; transform: translateY(12px); } /* 开始：透明，下移12px */
+    to { opacity: 1; transform: translateY(0); } /* 结束：不透明，原位 */
+  } /* 入场动画结束 */
+  .card-top { /* 卡片顶部行：图标+名称+标签 */
+    display: flex; /* 弹性布局，水平排列 */
+    align-items: center; /* 垂直居中 */
+    gap: 10px; /* 间距10px */
+    position: relative; /* 相对定位 */
+    z-index: 2; /* 层级2，在趋势线之上 */
+  } /* 顶部行结束 */
+  .service-icon { /* 服务图标容器 */
+    width: 40px; /* 宽40px */
+    height: 40px; /* 高40px */
+    border-radius: 10px; /* 圆角10px */
+    display: flex; /* 弹性布局 */
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+    flex-shrink: 0; /* 不压缩 */
+    overflow: hidden; /* 溢出隐藏 */
+  } /* 图标容器结束 */
+  .service-icon svg { /* 图标内SVG */
+    width: 26px; /* 宽26px */
+    height: 26px; /* 高26px */
+  } /* 图标SVG结束 */
+  .service-info { /* 服务信息容器：名称+标签 */
+    display: flex; /* 弹性布局 */
+    align-items: center; /* 垂直居中 */
+    gap: 6px; /* 间距6px */
+    flex: 1; /* 占满剩余空间 */
+    min-width: 0; /* 最小宽度0，允许省略 */
+  } /* 信息容器结束 */
+  .service-name { /* 服务名称 */
+    font-size: 16px; /* 字号16px */
+    font-weight: 700; /* 粗体 */
+    color: var(--text-primary); /* 黑色 */
+    white-space: nowrap; /* 不换行 */
+    overflow: hidden; /* 溢出隐藏 */
+    text-overflow: ellipsis; /* 溢出显示省略号 */
+  } /* 名称结束 */
+  .service-tag { /* 区域标签：国内/国际 */
+    font-size: 12px; /* 字号12px */
+    font-weight: 600; /* 半粗体 */
+    padding: 1px 7px; /* 内边距 */
+    border-radius: 5px; /* 圆角5px */
+    flex-shrink: 0; /* 不压缩 */
+  } /* 标签结束 */
+  .tag-domestic { /* 国内标签 */
+    color: var(--green); /* 绿色文字 */
+    background: rgba(52, 199, 89, 0.12); /* 淡绿背景 */
+  } /* 国内标签结束 */
+  .tag-international { /* 国际标签 */
+    color: var(--blue); /* 蓝色文字 */
+    background: rgba(0, 122, 255, 0.12); /* 淡蓝背景 */
+  } /* 国际标签结束 */
+  .card-bottom { /* 卡片底部行：趋势线 */
+    display: flex; /* 弹性布局 */
+    align-items: center; /* 垂直居中 */
+    margin-top: 6px; /* 顶部间距6px */
+    padding-left: 50px; /* 左内边距50px，对齐图标右侧 */
+    position: relative; /* 相对定位 */
+    z-index: 1; /* 层级1 */
+  } /* 底部行结束 */
+  .trend-chart { /* 趋势线容器 */
+    flex: 1; /* 占满剩余宽度 */
+    height: 28px; /* 高28px */
+    min-width: 0; /* 最小宽度0 */
+  } /* 趋势线容器结束 */
+  .trend-chart svg { /* 趋势线SVG */
+    width: 100%; /* 宽100% */
+    height: 100%; /* 高100% */
+    display: block; /* 块级显示 */
+    overflow: visible; /* 溢出可见 */
+  } /* SVG结束 */
+  .trend-line { /* 趋势线主线条 */
+    fill: none; /* 不填充 */
+    stroke-width: 1.8; /* 线宽1.8px */
+    stroke-linecap: round; /* 端点圆角 */
+    stroke-linejoin: miter; /* 连接点斜接，保持尖锐 */
+  } /* 主线条结束 */
+  .trend-glow { /* 趋势线发光层 */
+    fill: none; /* 不填充 */
+    stroke-width: 5; /* 线宽4px */
+    stroke-linecap: round; /* 端点圆角 */
+    stroke-linejoin: miter; /* 连接点斜接 */
+    opacity: 0.25; /* 透明度25% */
+    filter: blur(1px); /* 模糊1px，发光效果 */
+  } /* 发光层结束 */
+  .latency-display { /* 延迟数值容器 */
+    position: absolute; /* 绝对定位，相对于卡片 */
+    right: 16px; /* 距右14px */
+    top: 50%; /* 距顶50% */
+    transform: translateY(-50%); /* 上移50%，垂直居中 */
+    display: flex; /* 弹性布局 */
+    align-items: baseline; /* 基线对齐 */
+    z-index: 3; /* 层级3，最上层 */
+  } /* 数值容器结束 */
+  .latency-value { /* 延迟数值 */
+    font-size: 34px; /* 字号34px，大数字 */
+    font-weight: 800; /* 特粗体 */
+    line-height: 1; /* 行高1 */
+    letter-spacing: -0.5px; /* 字间距-0.5px */
+    font-variant-numeric: tabular-nums; /* 数字等宽 */
+    transition: color 0.3s; /* 颜色过渡0.3秒 */
+  } /* 数值结束 */
+  .latency-unit { /* 延迟单位ms */
+    font-size: 14px; /* 字号14px */
+    font-weight: 600; /* 半粗体 */
+    margin-left: 2px; /* 左间距2px */
+    opacity: 0.7; /* 透明度70% */
+    transition: color 0.3s; /* 颜色过渡 */
+  } /* 单位结束 */
+  .latency-good { color: var(--green); } /* 低延迟：绿色 */
+  .latency-warning { color: var(--orange); } /* 中等延迟：橙色 */
+  .latency-bad { color: var(--red); } /* 高延迟：红色 */
+  .card-detail { /* 卡片详情展开区域 */
+    max-height: 0; /* 最大高度0，默认收起 */
+    overflow: hidden; /* 溢出隐藏 */
+    transition: max-height 0.3s ease-out, margin-top 0.3s ease-out; /* 展开收起动画 */
+    margin-top: 0; /* 顶部间距0 */
+  } /* 详情结束 */
+  .card-detail.open { /* 详情展开状态 */
+    max-height: 140px; /* 最大高度140px */
+    margin-top: 10px; /* 顶部间距10px */
+  } /* 展开状态结束 */
+  .detail-content { /* 详情内容网格 */
+    border-top: 1px solid var(--card-border); /* 顶部边框分隔 */
+    padding-top: 10px; /* 顶部内边距 */
+    display: grid; /* 网格布局 */
+    grid-template-columns: 1fr 1fr; /* 两列等宽 */
+    gap: 8px; /* 网格间距8px */
+  } /* 详情内容结束 */
+  .detail-item { /* 详情项 */
+    display: flex; /* 弹性布局，垂直排列 */
+    flex-direction: column; /* 列方向 */
+    gap: 2px; /* 间距2px */
+  } /* 详情项结束 */
+  .detail-label { /* 详情标签 */
+    font-size: 11px; /* 字号11px */
+    color: var(--text-tertiary); /* 灰色 */
+    font-weight: 500; /* 字重500 */
+  } /* 标签结束 */
+  .detail-value { /* 详情数值 */
+    font-size: 14px; /* 字号14px */
+    color: var(--text-secondary); /* 深灰 */
+    font-weight: 600; /* 半粗体 */
+    font-variant-numeric: tabular-nums; /* 数字等宽 */
+  } /* 数值结束 */
+  .list-footer { /* 列表底部说明 */
+    text-align: center; /* 文字居中 */
+    padding: 14px 0; /* 内边距上下14px */
+    font-size: 13px; /* 字号13px */
+    color: var(--text-tertiary); /* 灰色 */
+  } /* 底部结束 */
+  .toast { /* Toast轻提示 */
+    position: fixed; /* 固定定位 */
+    bottom: calc(40px + var(--safe-bottom)); /* 距底部40px+安全区 */
+    left: 50%; /* 距左50% */
+    transform: translateX(-50%) translateY(20px); /* 居中，下移20px（隐藏） */
+    background: rgba(0,0,0,0.8); /* 黑色80%透明 */
+    color: #fff; /* 白色文字 */
+    padding: 10px 20px; /* 内边距 */
+    border-radius: 20px; /* 圆角20px，胶囊形 */
+    font-size: 14px; /* 字号14px */
+    font-weight: 500; /* 字重500 */
+    opacity: 0; /* 透明，默认隐藏 */
+    transition: opacity 0.25s, transform 0.25s; /* 过渡动画 */
+    z-index: 100; /* 层级100，最顶层 */
+    pointer-events: none; /* 不响应点击 */
+  } /* Toast结束 */
+  .toast.show { /* Toast显示状态 */
+    opacity: 1; /* 不透明 */
+    transform: translateX(-50%) translateY(0); /* 上滑入 */
+  } /* Toast显示结束 */
+</style> <!-- 样式表结束 -->
+</head> <!-- 头部结束 -->
+<body> <!-- 主体开始 -->
+<div class="app-container" id="app"> <!-- 应用容器 -->
+  <div class="monitor-bar"> <!-- 监控状态条 -->
+    <span class="monitor-dot"></span> <!-- 呼吸指示灯 -->
+    <span>正在ping……</span> <!-- 状态文字 -->
+  </div> <!-- 状态条结束 -->
+  <div class="list-container" id="listContainer"></div> <!-- 列表容器，JS动态生成卡片 -->
+</div> <!-- 应用容器结束 -->
+<div class="toast" id="toast"></div> <!-- Toast容器 -->
+<script> <!-- 脚本开始 -->
+(function() { // 立即执行函数(IIFE)，创建独立作用域
+  'use strict'; // 严格模式
+  const UPDATE_INTERVAL = 100; // 刷新间隔500ms=0.5秒
+  const DATA_POINTS = 56; // 趋势线数据点数量56个
+  const TIME_STEP = 0.05; // 虚拟时间步长0.12秒，控制心跳滚动速度
+  // 服务站点配置数组
+  const serviceConfigs = [
+    { // 抖音
+      id: 'douyin', name: '抖音', region: 'domestic', regionLabel: '国内',
+      baseLatency: 21, heartRate: 72, amplitude: 4.5, iconBg: '#E8F0FE', trendColor: '#81C784',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><rect x="8" y="14" width="6" height="20" rx="2" fill="#1A73E8"/><rect x="21" y="8" width="6" height="26" rx="2" fill="#4285F4"/><rect x="34" y="18" width="6" height="16" rx="2" fill="#1A73E8"/></svg>'
+    },
+    { // B站
+      id: 'bilibili', name: 'B站', region: 'domestic', regionLabel: '国内',
+      baseLatency: 28, heartRate: 68, amplitude: 5.5, iconBg: '#FCE4EC', trendColor: '#81C784',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="12" width="36" height="26" rx="6" fill="#FB7299"/><circle cx="17" cy="25" r="2.5" fill="#fff"/><circle cx="31" cy="25" r="2.5" fill="#fff"/><path d="M16 6l6 6M32 6l-6 6" stroke="#FB7299" stroke-width="3" stroke-linecap="round"/></svg>'
+    },
+    { // 微信
+      id: 'wechat', name: '微信', region: 'domestic', regionLabel: '国内',
+      baseLatency: 20, heartRate: 75, amplitude: 4.0, iconBg: '#E8F5E9', trendColor: '#81C784',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><path d="M18 8C9.7 8 3 13.6 3 20.5c0 3.9 2.2 7.4 5.6 9.7L7 36l6.5-3.2c1.4.4 2.9.6 4.5.6" fill="#07C160"/><path d="M45 28.5c0-5.8-6-10.5-13.5-10.5S18 22.7 18 28.5s6 10.5 13.5 10.5c1.5 0 2.9-.2 4.2-.5L42 41l-1.2-4.2c3.2-2 5.2-5.2 5.2-8.3z" fill="#07C160"/><circle cx="13" cy="18" r="1.8" fill="#fff"/><circle cx="23" cy="18" r="1.8" fill="#fff"/><circle cx="27" cy="27" r="1.5" fill="#fff"/><circle cx="36" cy="27" r="1.5" fill="#fff"/></svg>'
+    },
+    { // 淘宝
+      id: 'taobao', name: '淘宝', region: 'domestic', regionLabel: '国内',
+      baseLatency: 65, heartRate: 65, amplitude: 8.0, iconBg: '#FFF3E0', trendColor: '#81C784',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#FF5000"/><text x="24" y="22" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="sans-serif">淘宝</text><text x="24" y="34" text-anchor="middle" fill="#fff" font-size="7" font-weight="500" font-family="sans-serif" opacity="0.9">Taobao</text></svg>'
+    },
+    { // Cloudflare
+      id: 'cloudflare', name: 'Cloudflare', region: 'international', regionLabel: '国际',
+      baseLatency: 118, heartRate: 70, amplitude: 12.0, iconBg: '#F3E5F5', trendColor: '#FFB74D',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="26" r="14" fill="#F38020"/><path d="M16 28c0-4.4 3.6-8 8-8 3.2 0 6 1.9 7.3 4.7 2.8-.5 5 1.8 5 4.6 0 2.6-2.1 4.7-4.7 4.7H17.5c-2.5 0-4.5-2-4.5-4.5 0-2.3 1.7-4.2 3.9-4.5.1-.3.1-.6.1-.9z" fill="#fff"/></svg>'
+    },
+    { // GitHub
+      id: 'github', name: 'GitHub', region: 'international', regionLabel: '国际',
+      baseLatency: 294, heartRate: 88, amplitude: 22.0, iconBg: '#F5F5F5', trendColor: '#FFB74D',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><path d="M24 4C12.95 4 4 12.95 4 24c0 8.84 5.73 16.34 13.68 18.99.99.18 1.36-.43 1.36-.96v-3.37c-5.56 1.21-6.73-2.68-6.73-2.68-.91-2.31-2.22-2.92-2.22-2.92-1.81-1.24.14-1.21.14-1.21 2.01.14 3.07 2.07 3.07 2.07 1.78 3.06 4.67 2.18 5.81 1.67.18-1.3.7-2.18 1.27-2.68-4.44-.5-9.11-2.22-9.11-9.89 0-2.18.78-3.97 2.07-5.37-.21-.51-.9-2.55.2-5.32 0 0 1.68-.54 5.5 2.05a19.07 19.07 0 0110 0c3.82-2.59 5.5-2.05 5.5-2.05 1.1 2.77.41 4.81.2 5.32 1.29 1.4 2.07 3.19 2.07 5.37 0 7.69-4.68 9.39-9.13 9.88.72.62 1.36 1.84 1.36 3.71v5.5c0 .53.36 1.15 1.37.96A20.02 20.02 0 0044 24C44 12.95 35.05 4 24 4z" fill="#24292E"/></svg>'
+    },
+    { // ChatGPT
+      id: 'chatgpt', name: 'ChatGPT', region: 'international', regionLabel: '国际',
+      baseLatency: 420, heartRate: 96, amplitude: 35.0, iconBg: '#E8F5E9', trendColor: '#E57373',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><path d="M24 6C14.06 6 6 14.06 6 24s8.06 18 18 18 18-8.06 18-18S33.94 6 24 6zm-2.5 27.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm11.72-5.78c-.52.87-1.35 1.48-2.3 1.76l-1.18.35c-.28.08-.47.32-.47.62v1.05c0 .83-.67 1.5-1.5 1.5h-7.54c-.83 0-1.5-.67-1.5-1.5v-1.05c0-.3-.19-.54-.47-.62l-1.18-.35c-.95-.28-1.78-.89-2.3-1.76-.52-.87-.76-1.9-.66-2.95l.15-1.55c.03-.31-.02-.62-.14-.89l-.83-1.78c-.52-1.12-.47-2.43.14-3.5.61-1.07 1.68-1.82 2.92-2.05l1.42-.26c.28-.05.5-.24.6-.48l.71-1.68c.42-1 .99-1.88 1.69-2.61.7-.73 1.52-1.31 2.42-1.71.9-.4 1.86-.6 2.83-.6s1.93.2 2.83.6c.9.4 1.72.98 2.42 1.71.7.73 1.27 1.61 1.69 2.61l.71 1.68c.1.24.32.43.6.48l1.42.26c1.24.23 2.31.98 2.92 2.05.61 1.07.66 2.38.14 3.5l-.83 1.78c-.12.27-.17.58-.14.89l.15 1.55c.1 1.05-.14 2.08-.66 2.95z" fill="#10A37F"/></svg>'
+    },
+    { // Telegram
+      id: 'telegram', name: 'Telegram', region: 'international', regionLabel: '国际',
+      baseLatency: 343, heartRate: 95, amplitude: 28.0, iconBg: '#E3F2FD', trendColor: '#E57373',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" fill="#0088CC"/><path d="M10 24L38 12L32 38L24 30L18 36L16 26L10 24Z" fill="#fff"/></svg>'
+    },
+    { // X
+      id: 'xcom', name: 'X', region: 'international', regionLabel: '国际',
+      baseLatency: 595, heartRate: 102, amplitude: 45.0, iconBg: '#ECEFF1', trendColor: '#E57373',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="10" fill="#000000"/><path d="M30 10h5.5l-12 13.7L37.5 38H26l-8-10.5L9 38H3.5l12.8-14.6L6.5 10H18l7.2 9.6L30 10zm-2.3 25h3L17.5 13h-3.2L27.7 35z" fill="#fff"/></svg>'
+    },
+    { // YouTube
+      id: 'youtube', name: 'YouTube', region: 'international', regionLabel: '国际',
+      baseLatency: 355, heartRate: 90, amplitude: 30.0, iconBg: '#FFEBEE', trendColor: '#E57373',
+      icon: '<svg viewBox="0 0 48 48" fill="none"><rect x="2" y="12" width="44" height="24" rx="8" fill="#FF0000"/><path d="M20 18l12 6-12 6V18z" fill="#fff"/></svg>'
+    }
+  ]; // 服务配置数组结束
+  // ECG心电图波形函数：P波+Q波+R波+S波+T波
+  function ecgWave(t, bpm) {
+    const period = 60 / bpm; // 心跳周期时长=60/心率
+    const phase = ((t % period) + period) % period / period; // 当前相位0-1
+    function gauss(p, center, width, amp) { // 高斯函数
+      return amp * Math.exp(-Math.pow((p - center) / width, 2));
+    }
+    return gauss(phase, 0.12, 0.035, 0.12) + // P波
+           gauss(phase, 0.28, 0.012, -0.12) + // Q波
+           gauss(phase, 0.32, 0.018, 1.0) + // R波（主峰）
+           gauss(phase, 0.37, 0.016, -0.28) + // S波
+           gauss(phase, 0.58, 0.06, 0.22); // T波
+  }
+  // 初始化服务数据
+  function initService(config) {
+    const data = []; // 趋势数据数组
+    const phaseOffset = Math.random() * (60 / config.heartRate); // 随机相位偏移
+    for (let i = 0; i < DATA_POINTS; i++) { // 生成56个数据点
+      const t = -((DATA_POINTS - 1 - i) * TIME_STEP) + phaseOffset; // 从过去到现在的时间
+      data.push(config.baseLatency + ecgWave(t, config.heartRate) * config.amplitude); // 延迟值=基准+波形*振幅
+    }
+    return { ...config, latency: config.baseLatency, trendData: data, virtualTime: phaseOffset, level: getLevel(config.baseLatency) };
+  }
+  // 判断延迟等级
+  function getLevel(latency) {
+    if (latency < 100) return 'good'; // <100ms良好
+    if (latency < 300) return 'warning'; // <300ms警告
+    return 'bad'; // >=300ms差
+  }
+  // 计算网络波动（标准差）
+  function calcJitter(data) {
+    const mean = data.reduce(function(a, b) { return a + b; }, 0) / data.length; // 平均值
+    const variance = data.reduce(function(sum, val) { return sum + Math.pow(val - mean, 2); }, 0) / data.length; // 方差
+    return Math.sqrt(variance); // 标准差
+  }
+  const services = serviceConfigs.map(initService); // 初始化所有服务
+  let expandedCardId = null; // 当前展开的卡片ID
+  const listContainer = document.getElementById('listContainer'); // 列表容器
+  const toast = document.getElementById('toast'); // Toast容器
+  // 生成心跳折线SVG路径
+  function generateHeartbeatPath(data, width, height) {
+    if (data.length < 2) return '';
+    const padding = height * 0.15; // 上下内边距15%
+    const usableHeight = height - padding * 2; // 可用高度
+    const stepX = width / (data.length - 1); // 水平间距
+    const sorted = data.slice().sort(function(a, b) { return a - b; }); // 排序
+    const median = sorted[Math.floor(sorted.length / 2)]; // 中位数作为基线
+    const range = Math.max(median * 0.25, 8); // 显示范围
+    const min = median - range * 0.4; // 最小值
+    const max = median + range; // 最大值
+    const points = data.map(function(val, i) { // 映射为坐标点
+      return { x: i * stepX, y: padding + usableHeight - Math.max(0, Math.min(usableHeight, ((val - min) / (max - min)) * usableHeight)) };
+    });
+    let path = 'M ' + points[0].x.toFixed(1) + ',' + points[0].y.toFixed(1); // 起始点
+    for (let i = 1; i < points.length; i++) { // 连接各点
+      path += ' L ' + points[i].x.toFixed(1) + ',' + points[i].y.toFixed(1);
+    }
+    return path;
+  }
+  // 数字滚动动画
+  function animateNumber(element, from, to, duration) {
+    const startTime = performance.now(); // 开始时间
+    function update(currentTime) {
+      const elapsed = currentTime - startTime; // 已流逝时间
+      const progress = Math.min(elapsed / duration, 1); // 进度
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic缓动
+      element.textContent = Math.round(from + (to - from) * eased); // 更新数值
+      if (progress < 1) requestAnimationFrame(update); // 继续动画
+    }
+    requestAnimationFrame(update); // 启动
+  }
+  // 渲染单个卡片
+  function renderCard(service, index) {
+    const card = document.createElement('div'); // 创建卡片元素
+    card.className = 'service-card';
+    card.dataset.id = service.id;
+    card.style.animationDelay = (index * 0.04) + 's'; // 依次延迟入场
+    const levelClass = 'latency-' + service.level;
+    const tagClass = service.region === 'domestic' ? 'tag-domestic' : 'tag-international';
+    const pathD = generateHeartbeatPath(service.trendData, DATA_POINTS - 1, 28); // 生成趋势线
+    card.innerHTML =
+      '<div class="card-top">' +
+        '<div class="service-icon" style="background:' + service.iconBg + '">' + service.icon + '</div>' +
+        '<div class="service-info">' +
+          '<span class="service-name">' + service.name + '</span>' +
+          '<span class="service-tag ' + tagClass + '">' + service.regionLabel + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-bottom">' +
+        '<div class="trend-chart">' +
+          '<svg viewBox="0 0 ' + (DATA_POINTS - 1) + ' 28" preserveAspectRatio="none">' +
+            '<path class="trend-glow" d="' + pathD + '" stroke="' + service.trendColor + '"/>' +
+            '<path class="trend-line" d="' + pathD + '" stroke="' + service.trendColor + '"/>' +
+          '</svg>' +
+        '</div>' +
+      '</div>' +
+      '<div class="latency-display">' +
+        '<span class="latency-value ' + levelClass + '">' + Math.round(service.latency) + '</span>' +
+        '<span class="latency-unit ' + levelClass + '">ms</span>' +
+      '</div>' +
+      '<div class="card-detail" id="detail-' + service.id + '">' +
+        '<div class="detail-content">' +
+          '<div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>' +
+          '<div class="detail-item"><span class="detail-label">心率</span><span class="detail-value">' + service.heartRate + ' bpm</span></div>' +
+          '<div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>' +
+          '<div class="detail-item"><span class="detail-label">峰值/谷值</span><span class="detail-value" data-field="range">-- / -- ms</span></div>' +
+        '</div>' +
+      '</div>';
+    card.addEventListener('click', function() { // 点击展开/收起详情
+      const detail = document.getElementById('detail-' + service.id);
+      if (expandedCardId === service.id) {
+        detail.classList.remove('open');
+        expandedCardId = null;
+      } else {
+        if (expandedCardId) {
+          const prev = document.getElementById('detail-' + expandedCardId);
+          if (prev) prev.classList.remove('open');
+        }
+        detail.classList.add('open');
+        expandedCardId = service.id;
+        updateDetail(service);
+      }
+    });
+    return card;
+  }
+  // 更新详情数据
+  function updateDetail(service) {
+    const detail = document.getElementById('detail-' + service.id);
+    if (!detail) return;
+    const data = service.trendData;
+    const avg = Math.round(data.reduce(function(a, b) { return a + b; }, 0) / data.length);
+    const min = Math.round(Math.min.apply(null, data));
+    const max = Math.round(Math.max.apply(null, data));
+    const jitter = calcJitter(data).toFixed(1);
+    detail.querySelector('[data-field="jitter"]').textContent = jitter + ' ms';
+    detail.querySelector('[data-field="avg"]').textContent = avg + ' ms';
+    detail.querySelector('[data-field="range"]').textContent = max + ' / ' + min + ' ms';
+  }
+  // 渲染整个列表
+  function renderList() {
+    listContainer.innerHTML = '';
+    services.forEach(function(service, index) {
+      listContainer.appendChild(renderCard(service, index));
+    });
+    const footer = document.createElement('div');
+    footer.className = 'list-footer';
+    footer.textContent = '共 ' + services.length + ' 个节点 · 心电监护模式';
+    listContainer.appendChild(footer);
+  }
+  // 实时数据更新，每0.5秒调用
+  function updateData() {
+    services.forEach(function(service) {
+      service.virtualTime += TIME_STEP; // 虚拟时间前进
+      const wave = ecgWave(service.virtualTime, service.heartRate); // 计算波形值
+      const newLatency = service.baseLatency + wave * service.amplitude; // 新延迟值
+      const oldLatency = service.latency;
+      service.latency = newLatency;
+      service.trendData.shift(); // 移除最旧数据
+      service.trendData.push(newLatency); // 添加新数据，实现滚动
+      const newLevel = getLevel(service.baseLatency);
+      const levelChanged = newLevel !== service.level;
+      service.level = newLevel;
+      const card = listContainer.querySelector('[data-id="' + service.id + '"]');
+      if (card) {
+        const paths = card.querySelectorAll('.trend-line, .trend-glow');
+        const pathD = generateHeartbeatPath(service.trendData, DATA_POINTS - 1, 28);
+        paths.forEach(function(p) { p.setAttribute('d', pathD); }); // 更新趋势线
+        const valueEl = card.querySelector('.latency-value');
+        const unitEl = card.querySelector('.latency-unit');
+        if (valueEl) {
+          if (levelChanged) {
+            var lc = 'latency-' + service.level;
+            valueEl.className = 'latency-value ' + lc;
+            if (unitEl) unitEl.className = 'latency-unit ' + lc;
+          }
+          animateNumber(valueEl, oldLatency, newLatency, 300); // 数字滚动动画
+        }
+        if (expandedCardId === service.id) {
+          updateDetail(service); // 同步更新详情
+        }
+      }
+    });
+  }
+  let toastTimer = null;
+  function showToast(message) { // 显示Toast
+    toast.textContent = message;
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2000);
+  }
+  renderList(); // 初始渲染
+  setInterval(updateData, UPDATE_INTERVAL); // 每0.5秒更新数据
+})(); // IIFE结束
+</script>
+</body>
+</html>
