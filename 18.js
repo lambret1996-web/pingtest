@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年龄确认</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0b0b0f;
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .tip-text {
+            font-size: clamp(2rem,8vw,4rem);
+            font-weight: 900;
+            color: #eeeeee;
+            line-height: 1.3;
+            margin-bottom: 12vh;
+        }
+        .go-btn {
+            width: clamp(120px,35vw,220px);
+            height: clamp(120px,35vw,220px);
+            border-radius: 50%;
+            background: linear-gradient(135deg,#2563eb,#7c3aed);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            cursor: pointer;
+            box-shadow: 0 0 60px rgba(124, 58, 237,0.45);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border: none;
+        }
+        .go-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 90px rgba(124, 58, 237,0.65);
+        }
+        .go-btn:active {
+            transform: scale(0.96);
+        }
+        .go-logo {
+            font-size: clamp(3rem,10vw,5.5rem);
+            font-weight: bold;
+            color:#ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tip-text">请确保你已年满十八岁</div>
+        <button class="go-btn" onclick="location.href='https://h5.xxoo412.org/#/longvideo'">
+            <div class="go-logo">GO</div>
+        </button>
+    </div>
+</body>
+</html>
