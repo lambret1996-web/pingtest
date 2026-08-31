@@ -12,7 +12,15 @@
     --green: #34C759; --orange: #FF9500; --red: #FF3B30; --blue: #007AFF; --purple: #AF52DE; --gray: #8E8E93;
     --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
-  html, body { height: auto; overflow: auto; }
+  [data-theme="dark"]{
+    --bg:#121214;
+    --card-bg:#1E1E22;
+    --card-border:#2C2C32;
+    --text-primary:#F2F2F7;
+    --text-secondary:#D1D1D6;
+    --text-tertiary:#86868B;
+  }
+  html, body { height: auto; overflow: auto; transition: background 0.3s, color 0.3s;}
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
     background: var(--bg); color: var(--text-primary); font-size: 17px; line-height: 1.4; -webkit-font-smoothing: antialiased;
@@ -20,24 +28,54 @@
   .app-container {
     width: 100%; max-width: 430px; min-height: 100vh; margin: 0 auto;
     background: var(--bg); position: relative; display: flex; flex-direction: column;
+    transition: background 0.3s;
   }
   @media (min-width: 431px) {
     body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; }
     .app-container { min-height: 90vh; max-height: unset; border-radius: 40px; box-shadow: 0 25px 80px rgba(0,0,0,0.25); }
   }
-  /* 标题 */
-  .page-header { text-align: center; padding: 16px 16px 8px; flex-shrink: 0; }
+  /* 头部区域，放置标题+主题切换按钮 */
+  .page-header-wrap{
+    position:relative;
+    padding: 16px 16px 8px;
+  }
+  .page-header { text-align: center; }
   .page-title {
     font-size: 26px; font-weight: 800; letter-spacing: 1px;
     background: linear-gradient(135deg, #007AFF 0%, #AF52DE 50%, #FF2D55 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px;
   }
   .page-subtitle { font-size: 12px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
+  /* 右上角主题切换按钮 */
+  .theme-toggle{
+    position:absolute;
+    right:16px;
+    top:18px;
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    cursor:pointer;
+    transition: transform 0.2s;
+  }
+  .theme-toggle:active{
+    transform:scale(0.92);
+  }
+
   /* IP信息框 */
   .info-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); border: 1px solid rgba(0,122,255,0.1);
+    background: linear-gradient(135deg, var(--card-bg) 0%, #f8f9ff 100%); border: 1px solid rgba(0,122,255,0.1);
     border-radius: 14px; padding: 8px 12px; margin: 4px 14px 12px;
     box-shadow: 0 4px 16px rgba(0,122,255,0.08); position: relative; overflow: hidden;
+    transition: background 0.3s;
+  }
+  [data-theme="dark"] .info-card{
+    background: linear-gradient(135deg, var(--card-bg) 0%, #24242c 100%);
   }
   .info-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -78,7 +116,7 @@
     padding: 12px 8px;
     text-align: center;
     cursor: pointer;
-    transition: transform 0.15s;
+    transition: transform 0.15s, background 0.3s;
     animation: cardIn 0.4s ease-out both;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
@@ -96,7 +134,16 @@
     background: #f5f5f5;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
-  .service-icon img { width: 26px; height: 26px; object-fit: contain; display: block; }
+  [data-theme="dark"] .service-icon{
+    background:#2c2c32;
+  }
+  .service-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    padding:4px;
+  }
   .service-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom:4px; }
   .service-tag { font-size: 9px; font-weight: 600; padding: 1px 4px; border-radius: 4px; display:inline-block; margin-bottom:6px; }
   .tag-domestic { color: var(--green); background: rgba(52,199,89,0.12); }
@@ -121,22 +168,21 @@
     opacity:0;
     pointer-events:none;
     transition:opacity 0.24s ease;
-    padding:24px;
+    padding:20px;
   }
   .modal-overlay.open{
     opacity:1;
     pointer-events:auto;
   }
-  /* 正方形弹窗 - 新增渐变头部、图标、美化布局 */
+  /* 重构弹窗：取消固定正方形比例，加宽适配内容 */
   .modal-box{
-    width: min(280px, 85vw);
-    aspect-ratio:1 / 1;
-    background:#fff;
-    border-radius:20px;
+    width: min(340px, 92vw);
+    background:var(--card-bg);
+    border-radius:22px;
     overflow:hidden;
-    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    box-shadow:0 12px 36px rgba(0,0,0,0.18);
     transform:scale(0.92);
-    transition:transform 0.24s ease;
+    transition:transform 0.24s ease, background 0.3s;
     display:flex;
     flex-direction:column;
   }
@@ -144,41 +190,68 @@
     transform:scale(1);
   }
   .modal-header{
-    padding:16px 16px 12px;
+    padding:18px 18px 14px;
     background: linear-gradient(135deg, #007AFF 0%, #AF52DE 100%);
     color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .modal-site-icon{
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:#ffffff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .modal-site-icon img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    padding:5px;
+    display:block;
+  }
+  .modal-header-text{
     text-align:center;
   }
-  .modal-header-icon{
-    font-size:26px;
-    margin-bottom:4px;
-  }
   .modal-title{
-    font-size:16px;
-    font-weight:700;
+    font-size:18px;
+    font-weight:800;
+  }
+  .modal-sub{
+    font-size:11px;
+    opacity:0.85;
+    margin-top:2px;
   }
   .modal-body{
-    flex:1;
-    padding:16px 18px;
+    padding:20px 18px;
     display:grid;
     grid-template-columns: 1fr 1fr;
-    gap:14px;
-    align-content:center;
+    gap:16px;
   }
   .detail-item {
     display: flex;
     flex-direction: column;
     align-items:center;
-    gap:6px;
+    gap:8px;
     background:#f7f8fc;
-    border-radius:12px;
-    padding:10px 6px;
+    border-radius:14px;
+    padding:14px 8px;
+    transition: background 0.3s;
+  }
+  [data-theme="dark"] .detail-item{
+    background:#26262e;
   }
   .detail-icon{
-    font-size:18px;
+    font-size:20px;
   }
-  .detail-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
-  .detail-value { font-size: 15px; color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .detail-label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
+  .detail-value { font-size: 16px; color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; }
 
   /* ========== 优化后页脚样式 ========== */
   .list-footer {
@@ -188,10 +261,11 @@
     text-align: center;
   }
   .footer-card{
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 16px;
     padding: 16px 14px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: background 0.3s;
   }
   .visit-stats {
     display: flex;
@@ -238,9 +312,12 @@
 </head>
 <body>
 <div class="app-container" id="app">
-  <div class="page-header">
-    <div class="page-title">Ping 延迟测试</div>
-    <div class="page-subtitle">Real-time Network Monitor</div>
+  <div class="page-header-wrap">
+    <div class="theme-toggle" id="themeToggle">🌓</div>
+    <div class="page-header">
+      <div class="page-title">Ping 延迟测试</div>
+      <div class="page-subtitle">Real-time Network Monitor</div>
+    </div>
   </div>
   <div class="info-card">
     <div class="ip-bar">
@@ -257,8 +334,13 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box" id="modalBox">
     <div class="modal-header">
-      <div class="modal-header-icon">📊</div>
-      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-site-icon">
+        <img id="modalFavicon" src="" alt="">
+      </div>
+      <div class="modal-header-text">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-sub" id="modalSubTitle">延迟详情</div>
+      </div>
     </div>
     <div class="modal-body">
         <div class="detail-item">
@@ -292,6 +374,37 @@
   const UPDATE_INTERVAL = 50, DATA_POINTS = 56, TIMEOUT_MS = 3000;
   let isUpdating = false;
   const API_BASE = "";
+
+  // 主题模块
+  const appDom = document.getElementById('app');
+  const themeToggle = document.getElementById('themeToggle');
+  let currentTheme = 'light';
+  function setTheme(mode){
+    currentTheme = mode;
+    if(mode === 'dark'){
+      appDom.setAttribute('data-theme','dark');
+    }else{
+      appDom.removeAttribute('data-theme');
+    }
+    localStorage.setItem("pingTheme", mode);
+  }
+  // 根据当前时间自动判断：早7点~晚19点白天，其余夜间
+  function autoThemeByTime(){
+    const h = new Date().getHours();
+    if(h >=7 && h < 19) return 'light';
+    return 'dark';
+  }
+  // 初始化
+  const saved = localStorage.getItem("pingTheme");
+  if(saved){
+    setTheme(saved);
+  }else{
+    setTheme(autoThemeByTime());
+  }
+  themeToggle.addEventListener('click',()=>{
+    const next = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+  });
 
   const serviceConfigs = [
     { id:'wangzhe', name:'王者荣耀', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://pvp.qq.com/favicon.ico', testUrl:'https://pvp.qq.com/favicon.ico', siteUrl:null },
@@ -340,6 +453,7 @@
   const modalOverlay = document.getElementById('modalOverlay');
   const modalBox = document.getElementById('modalBox');
   const modalTitle = document.getElementById('modalTitle');
+  const modalFavicon = document.getElementById('modalFavicon');
 
   // 点击遮罩关闭弹窗，点击弹窗内部不关闭
   modalOverlay.addEventListener('click',e=>{
@@ -352,6 +466,10 @@
   function openModal(service){
     currentService = service;
     modalTitle.innerText = service.name;
+    // 弹窗加载对应站点图标
+    modalFavicon.src = service.iconUrl;
+    modalFavicon.onerror = function(){this.style.display='none';};
+
     const data = service.trendData;
     const jitterEl = modalBox.querySelector('[data-field="jitter"]');
     const avgEl = modalBox.querySelector('[data-field="avg"]');
@@ -434,7 +552,7 @@
     try{ const results=await Promise.all(services.map(s=>measureLatency(s.testUrl)));
       for(let i=0;i<services.length;i++){ const s=services[i], r=results[i], old=s.latency;
         if(r!==null){ s.latency=r; s.failCount=0; s.trendData.push(r); if(s.trendData.length>DATA_POINTS)s.trendData.shift(); }
-        else{ s.failCount++; if(s.failCount>=3)s.latency=null; }
+        else{ s.failCount++; if(s.failCount>=3)s.latency=null; s.latency=null; }
         const nl=getLevel(s.latency), lc=nl!==s.level; s.level=nl;
         const card=gridContainer.querySelector(`[data-id="${s.id}"]`);
         if(card){
@@ -443,7 +561,7 @@
             if(lc){ const c='latency-'+s.level; ve.className='latency-value '+c; if(ue)ue.className='latency-unit '+c; }
             if(s.latency!==null)animateNumber(ve,old,s.latency,200); else ve.textContent='--';
           }
-          // 如果当前弹窗打开的正是该站点，实时刷新弹窗数据
+          // 当前打开弹窗对应站点，实时刷新弹窗数据
           if(currentService && currentService.id === s.id){
             openModal(s);
           }
