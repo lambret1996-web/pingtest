@@ -60,8 +60,11 @@
   }
   .time-line .ip-icon { background: rgba(52,199,89,0.1); }
   .time-line .label { color: var(--text-tertiary); min-width: 60px; font-weight: 500; font-size: 12px; }
-  .time-line span.value { font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; font-size: 
-                      
+  .time-line span.value { font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; font-size: 14px; }
+  /* 监控状态条 */
+  .monitor-bar { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 16px 4px; font-size: 12px; color: var(--text-tertiary); font-weight: 500; flex-shrink: 0; }
+  .monitor-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 0.05s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
   /* 列表 */
   .list-container { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 4px 14px 0; overscroll-behavior: contain; }
   .list-container::-webkit-scrollbar { display: none; }
