@@ -177,7 +177,7 @@
   } /* 底部行结束 */
   .trend-chart { /* 趋势线容器 */
     flex: 1; /* 占满剩余宽度 */
-    height: 28px; /* 高28px */
+    height: 20px; /* 高28px */
     min-width: 0; /* 最小宽度0 */
   } /* 趋势线容器结束 */
   .trend-chart svg { /* 趋势线SVG */
@@ -188,13 +188,13 @@
   } /* SVG结束 */
   .trend-line { /* 趋势线主线条 */
     fill: none; /* 不填充 */
-    stroke-width: 1.8; /* 线宽1.8px */
+    stroke-width: 0.8; /* 线宽1.8px */
     stroke-linecap: round; /* 端点圆角 */
     stroke-linejoin: miter; /* 连接点斜接，保持尖锐 */
   } /* 主线条结束 */
   .trend-glow { /* 趋势线发光层 */
     fill: none; /* 不填充 */
-    stroke-width: 5; /* 线宽4px */
+    stroke-width: 3; /* 线宽4px */
     stroke-linecap: round; /* 端点圆角 */
     stroke-linejoin: miter; /* 连接点斜接 */
     opacity: 0.25; /* 透明度25% */
@@ -292,7 +292,7 @@
 <div class="app-container" id="app"> <!-- 应用容器 -->
   <div class="monitor-bar"> <!-- 监控状态条 -->
     <span class="monitor-dot"></span> <!-- 呼吸指示灯 -->
-    <span>正在ping……</span> <!-- 状态文字 -->
+    <span>网络波动测试中</span> <!-- 状态文字 -->
   </div> <!-- 状态条结束 -->
   <div class="list-container" id="listContainer"></div> <!-- 列表容器，JS动态生成卡片 -->
 </div> <!-- 应用容器结束 -->
