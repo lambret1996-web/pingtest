@@ -1,5 +1,5 @@
-/*export default {
- async fetch(request, env) {
+export default {
+/* async fetch(request, env) {
         // ========== 登录密码配置 ==========
     const USERNAME = "admin";   // 自定义用户名
     const PASSWORD = "123456";  // 自定义密码
