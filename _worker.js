@@ -1,6 +1,6 @@
 export default {
   async fetch(request, env) {
-        // ========== 登录密码配置 ==========
+      /*  // ========== 登录密码配置 ==========
     const USERNAME = "admin";   // 自定义用户名
     const PASSWORD = "123456";  // 自定义密码
     // 需要加密的路径，空数组=全站加密
@@ -36,7 +36,7 @@ export default {
           }
         });
       }
-    }
+    }*/
     const kv = env.KV;
 
     // 工具函数：获取北京时间（UTC+8），返回格式化字符串 YYYY-MM-DD HH:mm:ss
