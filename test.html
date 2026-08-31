@@ -127,50 +127,104 @@
     opacity:1;
     pointer-events:auto;
   }
-  /* 正方形弹窗 */
+  /* 正方形弹窗 - 新增渐变头部、图标、美化布局 */
   .modal-box{
     width: min(280px, 85vw);
     aspect-ratio:1 / 1;
     background:#fff;
-    border-radius:18px;
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+    border-radius:20px;
+    overflow:hidden;
     box-shadow:0 10px 30px rgba(0,0,0,0.15);
     transform:scale(0.92);
     transition:transform 0.24s ease;
+    display:flex;
+    flex-direction:column;
   }
   .modal-overlay.open .modal-box{
     transform:scale(1);
   }
-  .modal-title{
+  .modal-header{
+    padding:16px 16px 12px;
+    background: linear-gradient(135deg, #007AFF 0%, #AF52DE 100%);
+    color:#fff;
     text-align:center;
+  }
+  .modal-header-icon{
+    font-size:26px;
+    margin-bottom:4px;
+  }
+  .modal-title{
     font-size:16px;
     font-weight:700;
-    margin-bottom:16px;
   }
-  .detail-content {
-    display: grid;
+  .modal-body{
+    flex:1;
+    padding:16px 18px;
+    display:grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap:14px;
+    align-content:center;
   }
-  .detail-item { display: flex; flex-direction: column; gap: 4px; text-align:center; }
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items:center;
+    gap:6px;
+    background:#f7f8fc;
+    border-radius:12px;
+    padding:10px 6px;
+  }
+  .detail-icon{
+    font-size:18px;
+  }
   .detail-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
-  .detail-value { font-size: 14px; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .detail-value { font-size: 15px; color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-  /* 页脚 */
-  .list-footer { text-align: center; padding: 20px 0 calc(20px + var(--safe-bottom)); font-size: 11px; color: var(--text-tertiary); line-height: 1.8; grid-column:1/-1; }
-  .visit-stats { display: flex; justify-content: center; gap: 24px; margin-bottom: 8px; }
-  .visit-stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  /* ========== 优化后页脚样式 ========== */
+  .list-footer {
+    grid-column: 1 / -1;
+    margin-top: 24px;
+    padding: 20px 12px calc(24px + var(--safe-bottom));
+    text-align: center;
+  }
+  .footer-card{
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .visit-stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--card-border);
+  }
+  .visit-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
   .visit-stat-num {
-    font-size: 18px; font-weight: 800;
+    font-size: 20px; font-weight: 800;
     background: linear-gradient(135deg, #007AFF, #AF52DE);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     font-variant-numeric: tabular-nums;
   }
-  .visit-stat-label { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
-  .footer-divider { width: 40px; height: 1px; background: var(--card-border); margin: 8px auto; }
+  .visit-stat-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+  .footer-desc{
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .footer-tip{
+    margin-top:6px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.5;
+  }
 
   /* Toast */
   .toast {
@@ -202,12 +256,31 @@
 <!-- 弹窗 -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box" id="modalBox">
-    <div class="modal-title" id="modalTitle"></div>
-    <div class="detail-content">
-        <div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>
-        <div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>
-        <div class="detail-item"><span class="detail-label">峰值</span><span class="detail-value" data-field="max">-- ms</span></div>
-        <div class="detail-item"><span class="detail-label">谷值</span><span class="detail-value" data-field="min">-- ms</span></div>
+    <div class="modal-header">
+      <div class="modal-header-icon">📊</div>
+      <div class="modal-title" id="modalTitle"></div>
+    </div>
+    <div class="modal-body">
+        <div class="detail-item">
+          <span class="detail-icon">📈</span>
+          <span class="detail-label">网络波动</span>
+          <span class="detail-value" data-field="jitter">-- ms</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-icon">⚖️</span>
+          <span class="detail-label">平均延迟</span>
+          <span class="detail-value" data-field="avg">-- ms</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-icon">🔺</span>
+          <span class="detail-label">最高延迟</span>
+          <span class="detail-value" data-field="max">-- ms</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-icon">🔻</span>
+          <span class="detail-label">最低延迟</span>
+          <span class="detail-value" data-field="min">-- ms</span>
+        </div>
     </div>
   </div>
 </div>
@@ -334,12 +407,26 @@
       gridContainer.appendChild(renderCard(s,i));
     });
     const f=document.createElement('div'); f.className='list-footer';
-    f.innerHTML='<div class="visit-stats">'+
-      '<div class="visit-stat-item"><span class="visit-stat-num" id="visitTotal">--</span><span class="visit-stat-label">总访问量</span></div>'+
-      '<div class="visit-stat-num" id="visitToday">--</span><span class="visit-stat-label">今日访问</span></div></div>'+
-      '<div class="footer-divider"></div>'+
-      '<div>共 '+services.length+' 个节点 · 真实HTTP并发测速</div>'+
-      '<div style="margin-top:2px;">点击卡片查看详情 · GitHub 可跳转官网</div>';
+    f.innerHTML=`
+      <div class="footer-card">
+        <div class="visit-stats">
+          <div class="visit-stat-item">
+            <span class="visit-stat-num" id="visitTotal">--</span>
+            <span class="visit-stat-label">总访问量</span>
+          </div>
+          <div class="visit-stat-item">
+            <span class="visit-stat-num" id="visitToday">--</span>
+            <span class="visit-stat-label">今日访问</span>
+          </div>
+        </div>
+        <div class="footer-desc">
+          共 ${services.length} 个节点 · HTTP 实时延迟测速工具
+        </div>
+        <div class="footer-tip">
+          💡 使用提示：点击九宫格卡片查看网络波动、平均、最高延迟、最低延迟；GitHub图标可直达官网
+        </div>
+      </div>
+    `;
     gridContainer.appendChild(f);
   }
 
