@@ -68,7 +68,7 @@
   /* IP信息框 */
   .info-card {
     background: linear-gradient(135deg, var(--card-bg) 0%, #f8f9ff 100%); border: 1px solid rgba(0,122,255,0.1);
-    border-radius: 14px; padding: 8px 12px; margin: 4px 14px 12px;
+    border-radius: 14px; padding: 8px 12px; margin: 4px 12px 12px;
     box-shadow: 0 4px 16px rgba(0,122,255,0.08); position: relative; overflow: hidden;
     transition: background 0.3s;
   }
@@ -100,7 +100,7 @@
 
   /* 九宫格 */
   .grid-container {
-    padding: 0 14px;
+    padding: 0 12px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
@@ -120,7 +120,7 @@
   .service-card:active { transform: scale(0.96); }
   @keyframes cardIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
-  /* 图标修复：更大、更清晰、不拉伸 */
+  /* 主页图标：图片撑满容器，消除留白 */
   .service-icon {
     width: 48px;
     height: 48px;
@@ -137,9 +137,9 @@
     background:#2c2c32;
   }
   .service-icon img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
@@ -217,6 +217,7 @@
     align-items:center;
     gap:10px;
   }
+  /* 弹窗图标撑满容器消除留白 */
   .modal-site-icon{
     width:48px;
     height:48px;
@@ -229,9 +230,9 @@
     overflow:hidden;
   }
   .modal-site-icon img{
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display:block;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
@@ -273,17 +274,17 @@
   .detail-label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
   .detail-value { font-size: 16px; color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-  /* 页脚：与IP信息框同宽 */
+  /* 页脚：边距同步改成 12px，整体收窄2px */
   .list-footer {
     grid-column: 1 / -1;
     margin-top: 4px;
-    padding: 0 14px calc(12px + var(--safe-bottom));
+    padding: 0 12px calc(12px + var(--safe-bottom));
     text-align: center;
   }
   .footer-card{
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 10px 12px;
+    padding: 10px 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     transition: background 0.3s;
   }
