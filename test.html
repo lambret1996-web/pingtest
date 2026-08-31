@@ -109,28 +109,58 @@
   .latency-bad { color: var(--red); }
   .latency-offline { color: var(--gray); }
 
-  /* 详情面板 */
-  .card-detail {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out, margin-top 0.3s ease-out;
-    margin-top: 0;
-    grid-column: 1 / -1;
+  /* 弹窗遮罩 */
+  .modal-overlay{
+    position: fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    z-index:99;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.24s ease;
+    padding:24px;
   }
-  .card-detail.open { max-height: 160px; margin-top: 10px; }
+  .modal-overlay.open{
+    opacity:1;
+    pointer-events:auto;
+  }
+  /* 正方形弹窗 */
+  .modal-box{
+    width: min(280px, 85vw);
+    aspect-ratio:1 / 1;
+    background:#fff;
+    border-radius:18px;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    transform:scale(0.92);
+    transition:transform 0.24s ease;
+  }
+  .modal-overlay.open .modal-box{
+    transform:scale(1);
+  }
+  .modal-title{
+    text-align:center;
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:16px;
+  }
   .detail-content {
-    border-top: 1px solid var(--card-border);
-    padding-top: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
   }
-  .detail-item { display: flex; flex-direction: column; gap: 3px; }
-  .detail-label { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
-  .detail-value { font-size: 12px; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .detail-item { display: flex; flex-direction: column; gap: 4px; text-align:center; }
+  .detail-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+  .detail-value { font-size: 14px; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
 
   /* 页脚 */
-  .list-footer { text-align: center; padding: 20px 0 calc(20px + var(--safe-bottom)); font-size: 11px; color: var(--text-tertiary); line-height: 1.8; }
+  .list-footer { text-align: center; padding: 20px 0 calc(20px + var(--safe-bottom)); font-size: 11px; color: var(--text-tertiary); line-height: 1.8; grid-column:1/-1; }
   .visit-stats { display: flex; justify-content: center; gap: 24px; margin-bottom: 8px; }
   .visit-stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .visit-stat-num {
@@ -168,6 +198,20 @@
   </div>
   <div class="grid-container" id="gridContainer"></div>
 </div>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="detail-content">
+        <div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>
+        <div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>
+        <div class="detail-item"><span class="detail-label">峰值</span><span class="detail-value" data-field="max">-- ms</span></div>
+        <div class="detail-item"><span class="detail-label">谷值</span><span class="detail-value" data-field="min">-- ms</span></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 (function() {
@@ -176,7 +220,6 @@
   let isUpdating = false;
   const API_BASE = "";
 
-  // 删除淘宝，剩余刚好9个站点
   const serviceConfigs = [
     { id:'wangzhe', name:'王者荣耀', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://pvp.qq.com/favicon.ico', testUrl:'https://pvp.qq.com/favicon.ico', siteUrl:null },
     { id:'heping', name:'和平精英', region:'domestic', regionLabel:'国内', trendColor:'#34C759', iconUrl:'https://gp.qq.com/favicon.ico', testUrl:'https://gp.qq.com/favicon.ico', siteUrl:null },
@@ -189,27 +232,23 @@
     { id:'youtube', name:'YouTube', region:'international', regionLabel:'国际', trendColor:'#FF3B30', iconUrl:'https://www.youtube.com/favicon.ico', testUrl:'https://www.youtube.com/favicon.ico', siteUrl:null }
   ];
 
-  // IP信息
   (async function(){ try{ const r=await fetch("https://api.ip.sb/geoip"), d=await r.json();
     document.getElementById("clientIp").textContent=d.ip;
     document.getElementById("location").textContent=d.country+" "+(d.city||"");
     document.getElementById("isp").textContent=d.isp||"未知";
   }catch(e){ document.getElementById("clientIp").textContent="获取失败"; document.getElementById("location").textContent="获取失败"; document.getElementById("isp").textContent="获取失败"; }})();
 
-  // 北京时间
   function updateBeijingTime(){ const n=new Date(), b=new Date(n.getTime()+8*3600*1000);
     const y=b.getUTCFullYear(), m=String(b.getUTCMonth()+1).padStart(2,'0'), d=String(b.getUTCDate()).padStart(2,'0'),
     h=String(b.getUTCHours()).padStart(2,'0'), mi=String(b.getUTCMinutes()).padStart(2,'0'), s=String(b.getUTCSeconds()).padStart(2,'0');
     document.getElementById("nowTime").innerText=y+"-"+m+"-"+d+" "+h+":"+mi+":"+s; }
   updateBeijingTime(); setInterval(updateBeijingTime,1000);
 
-  // 访问统计
   async function reportVisit(){ try{ const r=await fetch(API_BASE+"/visit"), d=await r.json();
     const t=document.getElementById('visitTotal'), td=document.getElementById('visitToday');
     if(t)t.textContent=d.total||0; if(td)td.textContent=d.today||0;
   }catch(e){ const t=document.getElementById('visitTotal'), td=document.getElementById('visitToday'); if(t)t.textContent='--'; if(td)td.textContent='--'; }}
 
-  // 真实测速
   function measureLatency(url){ return new Promise(function(resolve){
     const start=performance.now(), img=new Image(); let settled=false;
     img.onload=function(){ if(settled)return; settled=true; resolve(performance.now()-start); };
@@ -223,8 +262,45 @@
   function calcJitter(d){ if(d.length<2)return 0; const m=d.reduce((a,b)=>a+b,0)/d.length; return Math.sqrt(d.reduce((s,v)=>s+Math.pow(v-m,2),0)/d.length); }
 
   const services=serviceConfigs.map(initService);
-  let expandedCardId=null;
+  let currentService = null;
   const gridContainer=document.getElementById('gridContainer'), toast=document.getElementById('toast');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalBox = document.getElementById('modalBox');
+  const modalTitle = document.getElementById('modalTitle');
+
+  // 点击遮罩关闭弹窗，点击弹窗内部不关闭
+  modalOverlay.addEventListener('click',e=>{
+    if(e.target === modalOverlay){
+      modalOverlay.classList.remove('open');
+      currentService = null;
+    }
+  })
+
+  function openModal(service){
+    currentService = service;
+    modalTitle.innerText = service.name;
+    const data = service.trendData;
+    const jitterEl = modalBox.querySelector('[data-field="jitter"]');
+    const avgEl = modalBox.querySelector('[data-field="avg"]');
+    const maxEl = modalBox.querySelector('[data-field="max"]');
+    const minEl = modalBox.querySelector('[data-field="min"]');
+    if(data && data.length>0){
+      const avg=Math.round(data.reduce((a,b)=>a+b,0)/data.length);
+      const mn=Math.round(Math.min(...data));
+      const mx=Math.round(Math.max(...data));
+      const jit=calcJitter(data).toFixed(1);
+      jitterEl.textContent = jit+' ms';
+      avgEl.textContent = avg+' ms';
+      maxEl.textContent = mx+' ms';
+      minEl.textContent = mn+' ms';
+    }else{
+      jitterEl.textContent='-- ms';
+      avgEl.textContent='-- ms';
+      maxEl.textContent='-- ms';
+      minEl.textContent='-- ms';
+    }
+    modalOverlay.classList.add('open');
+  }
 
   function animateNumber(el,from,to,dur){ if(from===null)from=0; const st=performance.now();
     function up(ct){ const p=Math.min((ct-st)/dur,1), e=1-Math.pow(1-p,3); el.textContent=Math.round(from+(to-from)*e); if(p<1)requestAnimationFrame(up);} requestAnimationFrame(up); }
@@ -245,47 +321,22 @@
       <span class="service-tag ${tc}">${service.regionLabel}</span>
       <div class="latency-value ${lc}">${dv}<span class="latency-unit ${lc}"> ms</span></div>`;
 
-    card.addEventListener('click',function(e){ if(e.target.closest('.service-icon-wrap a'))return;
-      const d=document.getElementById('detail-'+service.id);
-      if(expandedCardId===service.id){ d.classList.remove('open'); expandedCardId=null; }
-      else{ if(expandedCardId){ const p=document.getElementById('detail-'+expandedCardId); if(p)p.classList.remove('open'); }
-        d.classList.add('open'); expandedCardId=service.id; updateDetail(service); }
+    card.addEventListener('click',function(e){
+      if(e.target.closest('.service-icon-wrap a')) return;
+      openModal(service);
     });
     return card;
   }
-
-  function renderDetailPanel(service){
-    const panel = document.createElement('div');
-    panel.className="card-detail";
-    panel.id="detail-"+service.id;
-    panel.innerHTML = `<div class="detail-content">
-        <div class="detail-item"><span class="detail-label">网络波动</span><span class="detail-value" data-field="jitter">-- ms</span></div>
-        <div class="detail-item"><span class="detail-label">测速地址</span><span class="detail-value" style="font-size:11px;word-break:break-all;">${service.testUrl}</span></div>
-        <div class="detail-item"><span class="detail-label">平均延迟</span><span class="detail-value" data-field="avg">-- ms</span></div>
-        <div class="detail-item"><span class="detail-label">峰值/谷值</span><span class="detail-value" data-field="range">-- / -- ms</span></div>
-      </div>`;
-    return panel;
-  }
-
-  function updateDetail(service){ const d=document.getElementById('detail-'+service.id); if(!d)return; const data=service.trendData; if(!data.length)return;
-    const avg=Math.round(data.reduce((a,b)=>a+b,0)/data.length), mn=Math.round(Math.min(...data)), mx=Math.round(Math.max(...data)), jit=calcJitter(data).toFixed(1);
-    d.querySelector('[data-field="jitter"]').textContent=jit+' ms';
-    d.querySelector('[data-field="avg"]').textContent=avg+' ms';
-    d.querySelector('[data-field="range"]').textContent=mx+' / '+mn+' ms'; }
 
   function renderGrid(){
     gridContainer.innerHTML='';
     services.forEach((s,i)=>{
       gridContainer.appendChild(renderCard(s,i));
     });
-    // 详情面板单独追加，跨三列
-    services.forEach(s=>{
-      gridContainer.appendChild(renderDetailPanel(s));
-    });
     const f=document.createElement('div'); f.className='list-footer';
     f.innerHTML='<div class="visit-stats">'+
       '<div class="visit-stat-item"><span class="visit-stat-num" id="visitTotal">--</span><span class="visit-stat-label">总访问量</span></div>'+
-      '<div class="visit-stat-item"><span class="visit-stat-num" id="visitToday">--</span><span class="visit-stat-label">今日访问</span></div></div>'+
+      '<div class="visit-stat-num" id="visitToday">--</span><span class="visit-stat-label">今日访问</span></div></div>'+
       '<div class="footer-divider"></div>'+
       '<div>共 '+services.length+' 个节点 · 真实HTTP并发测速</div>'+
       '<div style="margin-top:2px;">点击卡片查看详情 · GitHub 可跳转官网</div>';
@@ -305,7 +356,10 @@
             if(lc){ const c='latency-'+s.level; ve.className='latency-value '+c; if(ue)ue.className='latency-unit '+c; }
             if(s.latency!==null)animateNumber(ve,old,s.latency,200); else ve.textContent='--';
           }
-          if(expandedCardId===s.id)updateDetail(s);
+          // 如果当前弹窗打开的正是该站点，实时刷新弹窗数据
+          if(currentService && currentService.id === s.id){
+            openModal(s);
+          }
         }
       }
     }catch(e){ console.error('测速异常:',e); } finally{ isUpdating=false; } }
