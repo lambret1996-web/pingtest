@@ -140,9 +140,9 @@
   .service-icon img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
-    padding:4px;
+    padding:0px;
   }
   .service-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom:4px; }
   .service-tag { font-size: 9px; font-weight: 600; padding: 1px 4px; border-radius: 4px; display:inline-block; margin-bottom:6px; }
@@ -150,7 +150,7 @@
   .tag-international { color: var(--blue); background: rgba(0,122,255,0.12); }
 
   .latency-value { font-size: 22px; font-weight: 800; line-height:1.1; font-variant-numeric: tabular-nums; }
-  .latency-unit { font-size: 10px; opacity:0.7; }
+  .latency-unit { font-size: 10px; opacity:0.7; margin-left:2px; }
   .latency-good { color: var(--green); }
   .latency-warning { color: var(--orange); }
   .latency-bad { color: var(--red); }
@@ -212,8 +212,8 @@
   .modal-site-icon img{
     width:100%;
     height:100%;
-    object-fit:contain;
-    padding:5px;
+    object-fit: cover;
+    padding:0px;
     display:block;
   }
   .modal-header-text{
@@ -253,17 +253,17 @@
   .detail-label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
   .detail-value { font-size: 16px; color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-  /* ========== 优化后页脚样式 ========== */
+  /* ==========九宫格页脚紧凑化========== */
   .list-footer {
     grid-column: 1 / -1;
-    margin-top: 24px;
-    padding: 20px 12px calc(24px + var(--safe-bottom));
+    margin-top: 4px;
+    padding: 8px 12px calc(12px + var(--safe-bottom));
     text-align: center;
   }
   .footer-card{
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 16px 14px;
+    padding: 10px 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     transition: background 0.3s;
   }
@@ -271,8 +271,8 @@
     display: flex;
     justify-content: space-around;
     gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
     border-bottom: 1px dashed var(--card-border);
   }
   .visit-stat-item {
@@ -291,13 +291,13 @@
   .footer-desc{
     font-size: 12px;
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.5;
   }
   .footer-tip{
-    margin-top:6px;
+    margin-top:3px;
     font-size: 11px;
     color: var(--text-tertiary);
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
   /* Toast */
@@ -339,7 +339,7 @@
       </div>
       <div class="modal-header-text">
         <div class="modal-title" id="modalTitle"></div>
-        <div class="modal-sub" id="modalSubTitle">延迟详情</div>
+        <div class="modal-subTitle">延迟详情</div>
       </div>
     </div>
     <div class="modal-body">
@@ -493,8 +493,17 @@
     modalOverlay.classList.add('open');
   }
 
-  function animateNumber(el,from,to,dur){ if(from===null)from=0; const st=performance.now();
-    function up(ct){ const p=Math.min((ct-st)/dur,1), e=1-Math.pow(1-p,3); el.textContent=Math.round(from+(to-from)*e); if(p<1)requestAnimationFrame(up);} requestAnimationFrame(up); }
+  function animateNumber(el,from,to,dur){
+    const st=performance.now();
+    function up(ct){
+      const p=Math.min((ct-st)/dur,1), e=1-Math.pow(1-p,3);
+      el.dataset.val = Math.round(from+(to-from)*e);
+      el.textContent = el.dataset.val;
+      if(p<1)requestAnimationFrame(up);
+    }
+    el.dataset.val = from??0;
+    requestAnimationFrame(up);
+  }
 
   function renderCard(service, index){
     const card=document.createElement('div');
@@ -510,7 +519,10 @@
       </${ht}>
       <div class="service-name">${service.name}</div>
       <span class="service-tag ${tc}">${service.regionLabel}</span>
-      <div class="latency-value ${lc}">${dv}<span class="latency-unit ${lc}"> ms</span></div>`;
+      <div class="latency-row">
+        <span class="latency-value ${lc}" data-val="${dv}">${dv}</span>
+        <span class="latency-unit ${lc}"> ms</span>
+      </div>`;
 
     card.addEventListener('click',function(e){
       if(e.target.closest('.service-icon-wrap a')) return;
@@ -559,7 +571,11 @@
           const ve=card.querySelector('.latency-value'), ue=card.querySelector('.latency-unit');
           if(ve){
             if(lc){ const c='latency-'+s.level; ve.className='latency-value '+c; if(ue)ue.className='latency-unit '+c; }
-            if(s.latency!==null)animateNumber(ve,old,s.latency,200); else ve.textContent='--';
+            if(s.latency!==null){
+              animateNumber(ve,old,s.latency,200);
+            }else {
+              ve.textContent='--';
+            }
           }
           // 当前打开弹窗对应站点，实时刷新弹窗数据
           if(currentService && currentService.id === s.id){
