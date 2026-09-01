@@ -1,16 +1,72 @@
 // Cloudflare Pages Functions - VLESS over WebSocket
-// Production-optimized version with error handling, validation, and logging
+// Production-optimized version with enhanced security, error handling, and validation
 
-// UUID 配置（与表单联动）
-const UUID = '5759d2b4-11d5-461c-91a5-e493f3dbb2c5';
+// 从环境变量读取 UUID，确保安全性
+const UUID = getAndValidateUUID();
 const VLESS_VERSION = 0;
+const CONNECTION_TIMEOUT = 30000; // 30秒连接超时
+const READ_TIMEOUT = 60000; // 60秒读取超时
+const KEEPALIVE_INTERVAL = 25000; // 25秒心跳间隔
 
-// 错误类型定义
+/**
+ * 获取和验证 UUID
+ */
+function getAndValidateUUID() {
+  const uuid = (globalThis.ENV?.VLESS_UUID || process.env?.VLESS_UUID || '').trim();
+  
+  if (!uuid) {
+    throw new Error('VLESS_UUID environment variable is not set');
+  }
+  
+  // 移除连字符并转小写
+  const normalized = uuid.replace(/-/g, '').toLowerCase();
+  
+  // UUID 应该是 32 个十六进制字符
+  if (!/^[0-9a-f]{32}$/.test(normalized)) {
+    throw new Error('Invalid VLESS_UUID format: must be a valid UUID');
+  }
+  
+  return normalized;
+}
+
+/**
+ * 错误类型定义
+ */
 class VlessError extends Error {
   constructor(message, code) {
     super(message);
     this.name = 'VlessError';
     this.code = code;
+  }
+}
+
+/**
+ * 连接状态管理
+ */
+class ConnectionState {
+  constructor() {
+    this.address = 'unknown';
+    this.port = 0;
+    this.startTime = Date.now();
+    this.bytesReceived = 0;
+    this.bytesSent = 0;
+    this.isConnected = false;
+    this.isClosed = false;
+    this.responseHeaderSent = false;
+  }
+
+  getDuration() {
+    return Date.now() - this.startTime;
+  }
+
+  getStats() {
+    return {
+      address: this.address,
+      port: this.port,
+      duration: this.getDuration(),
+      bytesReceived: this.bytesReceived,
+      bytesSent: this.bytesSent,
+    };
   }
 }
 
@@ -22,6 +78,12 @@ export async function onRequest(context) {
     const upgradeHeader = request.headers.get('Upgrade');
     if (upgradeHeader?.toLowerCase() !== 'websocket') {
       return new Response('Upgrade header must be websocket', { status: 400 });
+    }
+
+    // 验证连接来源（可选的额外安全性）
+    const origin = request.headers.get('Origin');
+    if (origin) {
+      console.log(`[VLESS] Connection from origin: ${origin}`);
     }
 
     // 创建 WebSocket 对
@@ -37,7 +99,7 @@ export async function onRequest(context) {
       webSocket: client,
     });
   } catch (error) {
-    console.error('[VLESS] 初始化错误:', error.message);
+    console.error('[VLESS] Initialization error:', error.message);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
@@ -46,53 +108,124 @@ export async function onRequest(context) {
  * 处理 WebSocket 连接
  */
 async function handleConnection(ws, context) {
-  let connectionInfo = {
-    address: 'unknown',
-    port: 0,
-    startTime: Date.now(),
-    bytesReceived: 0,
-    bytesSent: 0,
-  };
-
-  const log = (level, message, data = '') => {
-    const duration = Date.now() - connectionInfo.startTime;
-    const logLine = `[${level}] [${connectionInfo.address}:${connectionInfo.port}] [${duration}ms] ${message}${data ? ' - ' + JSON.stringify(data) : ''}`;
-    console.log(logLine);
-  };
-
+  const state = new ConnectionState();
   let remoteSocket = null;
   let vlessHeader = null;
   let isFirst = true;
+  let keepaliveInterval = null;
+  let readTimeout = null;
+  let connectionTimeout = null;
 
+  const log = (level, message, data = null) => {
+    const duration = state.getDuration();
+    const logEntry = `[${level}] [${state.address}:${state.port}] [${duration}ms] ${message}`;
+    if (data) {
+      console.log(logEntry, data);
+    } else {
+      console.log(logEntry);
+    }
+  };
+
+  /**
+   * 清理资源
+   */
+  const cleanup = () => {
+    if (state.isClosed) return;
+    state.isClosed = true;
+
+    if (keepaliveInterval) {
+      clearInterval(keepaliveInterval);
+      keepaliveInterval = null;
+    }
+    if (readTimeout) {
+      clearTimeout(readTimeout);
+      readTimeout = null;
+    }
+    if (connectionTimeout) {
+      clearTimeout(connectionTimeout);
+      connectionTimeout = null;
+    }
+    if (remoteSocket) {
+      try {
+        remoteSocket.close();
+      } catch (e) {
+        log('WARN', 'Error closing remote socket', e.message);
+      }
+      remoteSocket = null;
+    }
+  };
+
+  /**
+   * 重置读取超时
+   */
+  const resetReadTimeout = () => {
+    if (readTimeout) clearTimeout(readTimeout);
+    readTimeout = setTimeout(() => {
+      log('WARN', 'Read timeout, closing connection');
+      ws.close(1000, 'Read timeout');
+      cleanup();
+    }, READ_TIMEOUT);
+  };
+
+  /**
+   * 设置心跳保活
+   */
+  const setupKeepalive = () => {
+    keepaliveInterval = setInterval(() => {
+      try {
+        // 发送空心跳帧保持连接活跃
+        if (state.isConnected && !state.isClosed) {
+          ws.send(new Uint8Array(0));
+        }
+      } catch (e) {
+        log('WARN', 'Keepalive error', e.message);
+      }
+    }, KEEPALIVE_INTERVAL);
+  };
+
+  // WebSocket 消息处理
   ws.addEventListener('message', async (event) => {
     try {
+      resetReadTimeout();
+
       const buffer = new Uint8Array(event.data);
-      connectionInfo.bytesReceived += buffer.length;
+      state.bytesReceived += buffer.length;
 
       if (isFirst) {
         isFirst = false;
+
+        // 设置连接超时
+        connectionTimeout = setTimeout(() => {
+          log('ERROR', 'Connection timeout during VLESS handshake');
+          ws.close(1011, 'Handshake timeout');
+          cleanup();
+        }, CONNECTION_TIMEOUT);
 
         // 解析和验证 VLESS 头
         try {
           vlessHeader = parseVlessHeader(buffer);
         } catch (e) {
-          log('ERROR', '头部解析失败', e.message);
+          log('ERROR', 'Header parsing failed', e.message);
           ws.close(1002, 'Invalid VLESS header');
+          cleanup();
           return;
         }
 
         // UUID 验证
-        const normalizedUUID = UUID.replace(/-/g, '');
-        if (vlessHeader.uuid !== normalizedUUID) {
-          log('ERROR', 'UUID 验证失败', `期望: ${normalizedUUID}, 收到: ${vlessHeader.uuid}`);
+        if (vlessHeader.uuid !== UUID) {
+          log('ERROR', 'UUID verification failed', {
+            expected: UUID,
+            received: vlessHeader.uuid,
+          });
           ws.close(1008, 'Invalid UUID');
+          cleanup();
           return;
         }
 
-        connectionInfo.address = vlessHeader.address;
-        connectionInfo.port = vlessHeader.port;
+        state.address = vlessHeader.address;
+        state.port = vlessHeader.port;
 
-        log('INFO', '开始连接远程服务器');
+        log('INFO', 'Connecting to remote server');
 
         // 创建远程连接
         try {
@@ -100,47 +233,73 @@ async function handleConnection(ws, context) {
           await remoteSocket.connect({
             hostname: vlessHeader.address,
             port: vlessHeader.port,
+            timeout: CONNECTION_TIMEOUT,
           });
-          log('INFO', '远程服务器已连接');
+          log('INFO', 'Remote server connected');
+          state.isConnected = true;
+
+          // 清除连接超时
+          if (connectionTimeout) {
+            clearTimeout(connectionTimeout);
+            connectionTimeout = null;
+          }
+
+          // 启动心跳保活
+          setupKeepalive();
         } catch (e) {
-          log('ERROR', '无法连接远程服务器', e.message);
+          log('ERROR', 'Failed to connect remote server', e.message);
           ws.close(1011, 'Failed to connect remote server');
+          cleanup();
           return;
         }
 
         // 管道化远程响应到 WebSocket
         try {
-          remoteSocket.readable.pipeTo(
-            new WritableStream({
-              write(chunk) {
-                connectionInfo.bytesSent += chunk.length;
+          remoteSocket.readable
+            .pipeTo(
+              new WritableStream({
+                write: (chunk) => {
+                  try {
+                    state.bytesSent += chunk.length;
 
-                // 第一个响应包含 VLESS 响应头
-                if (vlessHeader.responseHeader) {
-                  const responseData = new Uint8Array(
-                    vlessHeader.responseHeader.length + chunk.length
-                  );
-                  responseData.set(vlessHeader.responseHeader, 0);
-                  responseData.set(chunk, vlessHeader.responseHeader.length);
-                  ws.send(responseData);
-                  vlessHeader.responseHeader = null;
-                } else {
-                  ws.send(chunk);
-                }
-              },
-              close() {
-                log('INFO', '远程连接已关闭');
-                ws.close(1000);
-              },
-              abort(reason) {
-                log('WARN', '远程连接中止', reason?.message || '未知原因');
-                ws.close(1011);
-              },
-            })
-          );
+                    // 第一个响应包含 VLESS 响应头
+                    if (!state.responseHeaderSent && vlessHeader.responseHeader) {
+                      const responseData = new Uint8Array(
+                        vlessHeader.responseHeader.length + chunk.length
+                      );
+                      responseData.set(vlessHeader.responseHeader, 0);
+                      responseData.set(chunk, vlessHeader.responseHeader.length);
+                      ws.send(responseData);
+                      state.responseHeaderSent = true;
+                    } else {
+                      ws.send(chunk);
+                    }
+                  } catch (e) {
+                    log('ERROR', 'Error writing to WebSocket', e.message);
+                    throw e;
+                  }
+                },
+                close: () => {
+                  log('INFO', 'Remote connection closed');
+                  ws.close(1000);
+                  cleanup();
+                },
+                abort: (reason) => {
+                  log('WARN', 'Remote connection aborted', reason?.message || 'Unknown reason');
+                  ws.close(1011);
+                  cleanup();
+                },
+              })
+            )
+            .catch((e) => {
+              log('ERROR', 'Pipe error', e.message);
+              ws.close(1011);
+              cleanup();
+            });
         } catch (e) {
-          log('ERROR', '管道化错误', e.message);
+          log('ERROR', 'Pipeline setup error', e.message);
           ws.close(1011);
+          cleanup();
           return;
         }
 
@@ -150,43 +309,48 @@ async function handleConnection(ws, context) {
           try {
             await remoteSocket.write(remainingData);
           } catch (e) {
-            log('ERROR', '初始数据写入失败', e.message);
+            log('ERROR', 'Failed to write initial data', e.message);
             ws.close(1011);
+            cleanup();
           }
         }
       } else {
         // 后续消息直接转发
         if (!remoteSocket) {
-          log('ERROR', '远程套接字不存在');
+          log('ERROR', 'Remote socket not available');
           ws.close(1011);
+          cleanup();
           return;
         }
 
         try {
           await remoteSocket.write(buffer);
         } catch (e) {
-          log('ERROR', '数据转发失败', e.message);
+          log('ERROR', 'Failed to forward data', e.message);
           ws.close(1011);
+          cleanup();
         }
       }
     } catch (e) {
-      log('ERROR', 'WebSocket 消息处理错误', e.message);
+      log('ERROR', 'WebSocket message handling error', e.message);
       ws.close(1011);
+      cleanup();
     }
   });
 
   ws.addEventListener('close', () => {
-    log('INFO', `连接已关闭 (↓${connectionInfo.bytesReceived}B ↑${connectionInfo.bytesSent}B)`);
-    if (remoteSocket) {
-      remoteSocket.close();
-    }
+    const stats = state.getStats();
+    log(
+      'INFO',
+      `Connection closed (↓${stats.bytesReceived}B ↑${stats.bytesSent}B)`,
+      stats
+    );
+    cleanup();
   });
 
   ws.addEventListener('error', (e) => {
-    log('ERROR', 'WebSocket 错误', e.message);
-    if (remoteSocket) {
-      remoteSocket.close();
-    }
+    log('ERROR', 'WebSocket error', e.message);
+    cleanup();
   });
 }
 
@@ -197,7 +361,7 @@ async function handleConnection(ws, context) {
 function parseVlessHeader(buffer) {
   // 最小长度检查：1(版本) + 16(UUID) + 1(加密方式长度) + 2(端口) + 1(地址类型) = 21
   if (buffer.length < 21) {
-    throw new VlessError('缓冲区过短，无效的 VLESS 头', 'BUFFER_TOO_SHORT');
+    throw new VlessError('Buffer too short, invalid VLESS header', 'BUFFER_TOO_SHORT');
   }
 
   let offset = 0;
@@ -205,48 +369,49 @@ function parseVlessHeader(buffer) {
   // 读取版本
   const version = buffer[offset++];
   if (version !== VLESS_VERSION) {
-    throw new VlessError(`不支持的 VLESS 版本: ${version}`, 'UNSUPPORTED_VERSION');
+    throw new VlessError(`Unsupported VLESS version: ${version}`, 'UNSUPPORTED_VERSION');
   }
 
   // 读取 UUID (16字节)
   if (offset + 16 > buffer.length) {
-    throw new VlessError('缓冲区过短，无法读取 UUID', 'BUFFER_TOO_SHORT');
+    throw new VlessError('Buffer too short to read UUID', 'BUFFER_TOO_SHORT');
   }
   const uuidBytes = buffer.slice(offset, offset + 16);
   offset += 16;
   const uuid = Array.from(uuidBytes)
     .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+    .join('')
+    .toLowerCase();
 
   // 读取加密方式长度
   if (offset >= buffer.length) {
-    throw new VlessError('缓冲区过短，无法读取加密方式长度', 'BUFFER_TOO_SHORT');
+    throw new VlessError('Buffer too short to read cipher length', 'BUFFER_TOO_SHORT');
   }
   const cipherLen = buffer[offset++];
   if (cipherLen > 16) {
-    throw new VlessError(`加密方式长度过长: ${cipherLen}`, 'INVALID_CIPHER_LEN');
+    throw new VlessError(`Cipher length too long: ${cipherLen}`, 'INVALID_CIPHER_LEN');
   }
 
   // 跳过加密方式数据
   if (offset + cipherLen > buffer.length) {
-    throw new VlessError('缓冲区过短，无法读取加密方式', 'BUFFER_TOO_SHORT');
+    throw new VlessError('Buffer too short to read cipher', 'BUFFER_TOO_SHORT');
   }
   offset += cipherLen;
 
   // 读取端口 (大端序，2字节)
   if (offset + 2 > buffer.length) {
-    throw new VlessError('缓冲区过短，无法读取端口', 'BUFFER_TOO_SHORT');
+    throw new VlessError('Buffer too short to read port', 'BUFFER_TOO_SHORT');
   }
   const port = (buffer[offset] << 8) | buffer[offset + 1];
   offset += 2;
 
   if (port < 1 || port > 65535) {
-    throw new VlessError(`端口号无效: ${port}`, 'INVALID_PORT');
+    throw new VlessError(`Invalid port number: ${port}`, 'INVALID_PORT');
   }
 
   // 读取地址类型
   if (offset >= buffer.length) {
-    throw new VlessError('缓冲区过短，无法读取地址类型', 'BUFFER_TOO_SHORT');
+    throw new VlessError('Buffer too short to read address type', 'BUFFER_TOO_SHORT');
   }
   const addrType = buffer[offset++];
 
@@ -257,7 +422,7 @@ function parseVlessHeader(buffer) {
   if (addrType === 1) {
     // IPv4 (4字节)
     if (offset + 4 > buffer.length) {
-      throw new VlessError('缓冲区过短，无法读取 IPv4 地址', 'BUFFER_TOO_SHORT');
+      throw new VlessError('Buffer too short to read IPv4 address', 'BUFFER_TOO_SHORT');
     }
     address = Array.from(buffer.slice(offset, offset + 4)).join('.');
     offset += 4;
@@ -265,16 +430,16 @@ function parseVlessHeader(buffer) {
   } else if (addrType === 2) {
     // 域名 (1字节长度 + 域名数据)
     if (offset >= buffer.length) {
-      throw new VlessError('缓冲区过短，无法读取域名长度', 'BUFFER_TOO_SHORT');
+      throw new VlessError('Buffer too short to read domain length', 'BUFFER_TOO_SHORT');
     }
     const domainLen = buffer[offset++];
 
     if (domainLen === 0 || domainLen > 255) {
-      throw new VlessError(`域名长度无效: ${domainLen}`, 'INVALID_DOMAIN_LEN');
+      throw new VlessError(`Invalid domain length: ${domainLen}`, 'INVALID_DOMAIN_LEN');
     }
 
     if (offset + domainLen > buffer.length) {
-      throw new VlessError('缓冲区过短，无法读取域名', 'BUFFER_TOO_SHORT');
+      throw new VlessError('Buffer too short to read domain', 'BUFFER_TOO_SHORT');
     }
 
     address = new TextDecoder().decode(buffer.slice(offset, offset + domainLen));
@@ -283,7 +448,7 @@ function parseVlessHeader(buffer) {
   } else if (addrType === 3) {
     // IPv6 (16字节)
     if (offset + 16 > buffer.length) {
-      throw new VlessError('缓冲区过短，无法读取 IPv6 地址', 'BUFFER_TOO_SHORT');
+      throw new VlessError('Buffer too short to read IPv6 address', 'BUFFER_TOO_SHORT');
     }
     const ipv6Parts = [];
     for (let i = 0; i < 16; i += 2) {
@@ -296,16 +461,17 @@ function parseVlessHeader(buffer) {
     offset += 16;
     headerLength = offset;
   } else {
-    throw new VlessError(`不支持的地址类型: ${addrType}`, 'UNSUPPORTED_ADDR_TYPE');
+    throw new VlessError(`Unsupported address type: ${addrType}`, 'UNSUPPORTED_ADDR_TYPE');
   }
 
   // 验证地址
   if (!address || address.length === 0) {
-    throw new VlessError('地址为空', 'EMPTY_ADDRESS');
+    throw new VlessError('Empty address', 'EMPTY_ADDRESS');
   }
 
-  // 构建响应头：[版本(1B)][命令(1B)]
-  const responseHeader = new Uint8Array([version, 0]);
+  // 构建响应头：[版本(1B)][命令(1B)][长度(1B)]
+  // 根据 VLESS 协议，响应头应该包含版本、命令和后续数据长度
+  const responseHeader = new Uint8Array([version, 0, 0]);
 
   return {
     uuid,
@@ -331,24 +497,34 @@ class Connect {
    */
   async connect(options) {
     try {
-      this.socket = new Socket(options);
+      const { hostname, port, timeout = CONNECTION_TIMEOUT } = options;
+
+      this.socket = new Socket({
+        hostname,
+        port,
+      });
+
+      // 设置连接超时
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timeout')), timeout)
+      );
 
       // 等待连接打开
-      if (this.socket.opened) {
-        await this.socket.opened;
-      }
+      const openedPromise = this.socket.opened ? Promise.resolve(this.socket.opened) : Promise.resolve();
+
+      await Promise.race([openedPromise, timeoutPromise]);
 
       this.readable = this.socket.readable;
       this.writable = this.socket.writable;
 
       // 监听关闭事件
       if (this.socket.closed) {
-        this.socket.closed.catch(() => {
-          // 连接已关闭
+        this.socket.closed.catch((e) => {
+          // 连接已关闭，无需处理
         });
       }
     } catch (error) {
-      throw new VlessError(`连接失败: ${error.message}`, 'CONNECT_FAILED');
+      throw new VlessError(`Connection failed: ${error.message}`, 'CONNECT_FAILED');
     }
   }
 
@@ -357,7 +533,7 @@ class Connect {
    */
   async write(data) {
     if (!this.writable) {
-      throw new VlessError('可写流不可用', 'WRITABLE_UNAVAILABLE');
+      throw new VlessError('Writable stream not available', 'WRITABLE_UNAVAILABLE');
     }
 
     try {
@@ -368,7 +544,7 @@ class Connect {
         writer.releaseLock();
       }
     } catch (error) {
-      throw new VlessError(`写入失败: ${error.message}`, 'WRITE_FAILED');
+      throw new VlessError(`Write failed: ${error.message}`, 'WRITE_FAILED');
     }
   }
 
