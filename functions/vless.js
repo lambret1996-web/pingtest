@@ -1,33 +1,12 @@
 // Cloudflare Pages Functions - VLESS over WebSocket
 // Production-optimized version with enhanced security, error handling, and validation
 
-// 从环境变量读取 UUID，确保安全性
-const UUID = getAndValidateUUID();
+// 明码 UUID
+const UUID = '62bc5cd25eef4e12b9b324087eff5082';
 const VLESS_VERSION = 0;
 const CONNECTION_TIMEOUT = 30000; // 30秒连接超时
 const READ_TIMEOUT = 60000; // 60秒读取超时
 const KEEPALIVE_INTERVAL = 25000; // 25秒心跳间隔
-
-/**
- * 获取和验证 UUID
- */
-function getAndValidateUUID() {
-  const uuid = (globalThis.ENV?.VLESS_UUID || process.env?.VLESS_UUID || '').trim();
-  
-  if (!uuid) {
-    throw new Error('VLESS_UUID environment variable is not set');
-  }
-  
-  // 移除连字符并转小写
-  const normalized = uuid.replace(/-/g, '').toLowerCase();
-  
-  // UUID 应该是 32 个十六进制字符
-  if (!/^[0-9a-f]{32}$/.test(normalized)) {
-    throw new Error('Invalid VLESS_UUID format: must be a valid UUID');
-  }
-  
-  return normalized;
-}
 
 /**
  * 错误类型定义
