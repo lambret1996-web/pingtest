@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assistant</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      padding: 20px;
+      background: #111827;
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      margin-bottom: 24px;
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .new-chat {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px;
+      color: white;
+      background: #2563eb;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .new-chat:hover {
+      background: #1d4ed8;
+    }
+
+    .history {
+      margin-top: 24px;
+      overflow-y: auto;
+    }
+
+    .history-title {
+      margin-bottom: 10px;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+
+    .history-item {
+      padding: 10px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      color: #d1d5db;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item:hover {
+      background: #1f2937;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .model {
+      padding: 7px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      color: #374151;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 28px;
+      overflow-y: auto;
+    }
+
+    .welcome {
+      max-width: 700px;
+      margin: 100px auto;
+      text-align: center;
+    }
+
+    .welcome h2 {
+      margin-bottom: 12px;
+      font-size: 30px;
+    }
+
+    .welcome p {
+      color: #6b7280;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 850px;
+      margin: 0 auto 22px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      flex-shrink: 0;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: #2563eb;
+      font-size: 14px;
+    }
+
+    .message.user .avatar {
+      background: #6b7280;
+    }
+
+    .bubble {
+      max-width: 750px;
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: white;
+      line-height: 1.7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message.user .bubble {
+      background: #e8f0ff;
+    }
+
+    .input-area {
+      padding: 16px 28px 22px;
+      background: #f5f7fb;
+    }
+
+    .input-box {
+      display: flex;
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      background: white;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 46px;
+      max-height: 150px;
+      padding: 12px;
+      border: 0;
+      outline: 0;
+      resize: none;
+      font: inherit;
+    }
+
+    .send {
+      align-self: flex-end;
+      padding: 11px 18px;
+      border: 0;
+      border-radius: 9px;
+      color: white;
+      background: #2563eb;
+      cursor: pointer;
+    }
+
+    .send:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .tip {
+      max-width: 850px;
+      margin: 8px auto 0;
+      color: #9ca3af;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (max-width: 700px) {
+      .sidebar {
+        display: none;
+      }
+
+      .messages {
+        padding: 18px 12px;
+      }
+
+      .input-area {
+        padding: 12px;
+      }
+
+      .topbar {
+        padding: 0 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">AI Assistant</div>
+
+      <button class="new-chat" id="newChat">
+        ＋ 新建对话
+      </button>
+
+      <div class="history">
+        <div class="history-title">历史对话</div>
+        <div id="historyList"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>智能助手</h1>
+
+        <select class="model" id="model">
+          <option value="default">默认模型</option>
+          <option value="fast">快速模型</option>
+          <option value="advanced">高级模型</option>
+        </select>
+      </header>
+
+      <section class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <h2>你好，我可以帮你做什么？</h2>
+          <p>你可以向我提问、写作、编程、翻译或分析内容。</p>
+        </div>
+      </section>
+
+      <section class="input-area">
+        <div class="input-box">
+          <textarea
+            id="input"
+            placeholder="输入你的问题，按 Enter 发送..."
+          ></textarea>
+
+          <button class="send" id="send">
+            发送
+          </button>
+        </div>
+
+        <div class="tip">
+          AI 生成的内容可能存在错误，请自行判断。
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const messages = document.getElementById("messages");
+    const welcome = document.getElementById("welcome");
+    const input = document.getElementById("input");
+    const sendButton = document.getElementById("send");
+    const newChatButton = document.getElementById("newChat");
+    const historyList = document.getElementById("historyList");
+    const modelSelect = document.getElementById("model");
+
+    let chatHistory = [];
+
+    function addMessage(role, content) {
+      welcome.style.display = "none";
+
+      const message = document.createElement("div");
+      message.className = `message ${role}`;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = role === "user" ? "你" : "AI";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = content;
+
+      message.appendChild(avatar);
+      message.appendChild(bubble);
+      messages.appendChild(message);
+
+      messages.scrollTop = messages.scrollHeight;
+      return bubble;
+    }
+
+    function addHistory(text) {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.textContent = text;
+      historyList.prepend(item);
+    }
+
+    function showLoading() {
+      return addMessage("assistant", "正在思考...");
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+
+      if (!text || sendButton.disabled) {
+        return;
+      }
+
+      addMessage("user", text);
+      addHistory(text.slice(0, 30));
+
+      chatHistory.push({
+        role: "user",
+        content: text
+      });
+
+      input.value = "";
+      sendButton.disabled = true;
+
+      const loadingBubble = showLoading();
+
+      try {
+        /*
+         * 将这里替换为你的后端接口。
+         *
+         * 后端接口需要接收：
+         * {
+         *   messages: [...],
+         *   model: "default"
+         * }
+         *
+         * 并返回：
+         * {
+         *   reply: "AI 回复内容"
+         * }
+         */
+
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messages: chatHistory,
+            model: modelSelect.value
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("请求失败");
+        }
+
+        const data = await response.json();
+        loadingBubble.textContent = data.reply || "AI 没有返回内容。";
+
+        chatHistory.push({
+          role: "assistant",
+          content: data.reply
+        });
+      } catch (error) {
+        loadingBubble.textContent =
+          "当前还没有连接 AI 后端。请配置 /api/chat 接口。";
+        console.error(error);
+      } finally {
+        sendButton.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    newChatButton.addEventListener("click", function () {
+      chatHistory = [];
+      messages.innerHTML = "";
+      messages.appendChild(welcome);
+      welcome.style.display = "block";
+      input.focus();
+    });
+  </script>
+</body>
+</html>
