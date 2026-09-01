@@ -1,7 +1,7 @@
 // Cloudflare Pages Functions - VLESS over WebSocket
-// UUID 占位符：de100222-ca26-49aa-90ec-df5e5129a416（与表单联动）
+// UUID 占位符：5759d2b4-11d5-461c-91a5-e493f3dbb2c5（与表单联动）
 
-const UUID = 'de100222-ca26-49aa-90ec-df5e5129a416';
+const UUID = '5759d2b4-11d5-461c-91a5-e493f3dbb2c5';
 
 export async function onRequest(context) {
   const { request } = context;
