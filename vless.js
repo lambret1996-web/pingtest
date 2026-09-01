@@ -1,110 +1,174 @@
-export default {
-  async fetch(request) {
-    const UUID = "62bc5cd2‑5eef‑4e12‑b9b3‑24087eff5082";
-    const url = new URL(request.url);
+// Cloudflare Pages Functions - VLESS over WebSocket
+// UUID 占位符：1a407d28-4629-4c8b-9363-c33698d41872（与表单联动）
 
-    // 匹配你项目统一的路径前缀 /Proxyip.
-    if (!url.pathname.startsWith("/Proxyip.cmliussss.net")) {
-      return new Response("Path Not Match", { status: 404 });
-    }
+const UUID = '1a407d28-4629-4c8b-9363-c33698d41872';
 
-    if (request.headers.get("Upgrade") !== "websocket") {
-      return new Response("Require WebSocket Upgrade", { status: 426 });
-    }
+export async function onRequest(context) {
+  const { request } = context;
+  const upgradeHeader = request.headers.get('Upgrade');
 
-    const [clientWs, serverWs] = new WebSocketPair();
-    serverWs.accept();
-
-    let buffer = new Uint8Array(0);
-    let socket = null;
-
-    serverWs.addEventListener("message", async evt => {
-      const chunk = new Uint8Array(evt.data);
-      const newBuf = new Uint8Array(buffer.length + chunk.length);
-      newBuf.set(buffer);
-      newBuf.set(chunk, buffer.length);
-      buffer = newBuf;
-
-      // VLESS 头部至少17字节才开始解析
-      if (buffer.length < 17) return;
-
-      const ver = buffer[0];
-      const uuidRaw = buffer.slice(1, 17);
-      const targetUuidHex = UUID.replaceAll("-", "");
-      const recvUuidHex = Array.from(uuidRaw).map(b => b.toString(16).padStart(2, "0")).join("");
-
-      if (ver !== 0 || recvUuidHex !== targetUuidHex) {
-        serverWs.close(1008, "Auth Failed");
-        return;
-      }
-
-      const cmd = buffer[17];
-      const atyp = buffer[18];
-      let offset = 19;
-      let host, port;
-
-      if (atyp === 1) {
-        host = `${buffer[offset]}.${buffer[offset+1]}.${buffer[offset+2]}.${buffer[offset+3]}`;
-        offset += 4;
-      } else if (atyp === 2) {
-        const domainLen = buffer[offset];
-        offset++;
-        host = new TextDecoder().decode(buffer.slice(offset, offset + domainLen));
-        offset += domainLen;
-      } else {
-        serverWs.close();
-        return;
-      }
-
-      port = (buffer[offset] << 8) | buffer[offset + 1];
-      offset += 2;
-      const payload = buffer.slice(offset);
-      buffer = new Uint8Array(0);
-
-      // 只处理 TCP 请求
-      if (cmd !== 1) {
-        serverWs.close();
-        return;
-      }
-
-      // Cloudflare Worker Socket API
-      socket = new Socket({ address: host, port });
-      await socket.opened;
-
-      // 收到目标网站数据，转发给客户端WebSocket
-      (async () => {
-        const reader = socket.readable.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (serverWs.readyState === WebSocket.OPEN) serverWs.send(value);
-        }
-        serverWs.close();
-      })();
-
-      // 首次数据包发送
-      if (payload.length > 0) {
-        const writer = socket.writable.getWriter();
-        await writer.write(payload);
-        writer.releaseLock();
-      }
-
-      // 后续客户端流量直接转发到出站Socket
-      serverWs.addEventListener("message", async e => {
-        if (!socket) return;
-        const w = socket.writable.getWriter();
-        await w.write(new Uint8Array(e.data));
-        w.releaseLock();
-      });
-    });
-
-    serverWs.addEventListener("close", () => {
-      if (socket) socket.close();
-    });
-
-    return new Response(null, {
-      status: 101,
-      webSocket: clientWs
-    });
+  if (upgradeHeader !== 'websocket') {
+    return new Response('Not Found', { status: 404 });
   }
-};
+
+  const webSocketPair = new WebSocketPair();
+  const [client, server] = Object.values(webSocketPair);
+
+  server.accept();
+  handleConnection(server, context);
+
+  return new Response(null, {
+    status: 101,
+    webSocket: client,
+  });
+}
+
+async function handleConnection(ws, context) {
+  let address = '';
+  let portWithRandomLog = '';
+  const log = (info, event) => {
+    console.log(`[${address}:${portWithRandomLog}]`, info, event || '');
+  };
+
+  const remoteSocket = new Connect();
+  let vlessHeader = null;
+  let isFirst = true;
+
+  ws.addEventListener('message', async (event) => {
+    try {
+      const buffer = new Uint8Array(event.data);
+
+      if (isFirst) {
+        isFirst = false;
+        vlessHeader = parseVlessHeader(buffer);
+        
+        if (vlessHeader.uuid !== UUID.replace(/-/g, '')) {
+          ws.close();
+          return;
+        }
+
+        address = vlessHeader.address;
+        const port = vlessHeader.port;
+        portWithRandomLog = port + ' - ' + Math.random().toString(36).substring(2, 6);
+        
+        log('connecting');
+        
+        await remoteSocket.connect({
+          hostname: address,
+          port: port,
+        });
+        
+        log('connected');
+
+        remoteSocket.readable.pipeTo(
+          new WritableStream({
+            write(chunk) {
+              if (vlessHeader && vlessHeader.responseHeader) {
+                const data = new Uint8Array(vlessHeader.responseHeader.length + chunk.length);
+                data.set(vlessHeader.responseHeader, 0);
+                data.set(chunk, vlessHeader.responseHeader.length);
+                ws.send(data);
+                vlessHeader.responseHeader = null;
+              } else {
+                ws.send(chunk);
+              }
+            },
+            close() {
+              log('remote closed');
+              ws.close();
+            },
+            abort(reason) {
+              log('remote abort', reason);
+              ws.close();
+            },
+          })
+        );
+
+        if (buffer.length > vlessHeader.headerLength) {
+          const data = buffer.slice(vlessHeader.headerLength);
+          await remoteSocket.write(data);
+        }
+      } else {
+        await remoteSocket.write(buffer);
+      }
+    } catch (e) {
+      log('ws message error', e.message);
+      ws.close();
+    }
+  });
+
+  ws.addEventListener('close', () => {
+    log('ws closed');
+    remoteSocket.close();
+  });
+
+  ws.addEventListener('error', (e) => {
+    log('ws error', e.message);
+    remoteSocket.close();
+  });
+}
+
+function parseVlessHeader(buffer) {
+  const version = buffer[0];
+  const uuidBytes = buffer.slice(1, 17);
+  const uuid = [...uuidBytes].map(b => b.toString(16).padStart(2, '0')).join('');
+  const addLen = buffer[17];
+  let portIndex = 18 + addLen;
+  const port = (buffer[portIndex] << 8) | buffer[portIndex + 1];
+  const addrType = buffer[portIndex + 2];
+  let addr;
+  let dataIndex;
+
+  if (addrType === 1) {
+    addr = buffer.slice(portIndex + 3, portIndex + 7).join('.');
+    dataIndex = portIndex + 7;
+  } else if (addrType === 2) {
+    const len = buffer[portIndex + 3];
+    addr = new TextDecoder().decode(buffer.slice(portIndex + 4, portIndex + 4 + len));
+    dataIndex = portIndex + 4 + len;
+  } else {
+    addr = [...buffer.slice(portIndex + 3, portIndex + 19)].map(b => b.toString(16).padStart(2, '0')).join(':');
+    dataIndex = portIndex + 19;
+  }
+
+  const headerLength = dataIndex;
+  const responseHeader = new Uint8Array([version, 0]);
+
+  return { uuid, address: addr, port, headerLength, responseHeader };
+}
+
+class Connect {
+  constructor() {
+    this.writable = null;
+    this.readable = null;
+    this.socket = null;
+  }
+
+  async connect(options) {
+    this.socket = new Socket(options);
+    this.readable = this.socket.readable;
+    this.writable = this.socket.writable;
+    
+    if (this.socket.opened) {
+      await this.socket.opened;
+    }
+    if (this.socket.closed) {
+      this.socket.closed.catch(() => {});
+    }
+  }
+
+  async write(data) {
+    if (!this.writable) return;
+    const writer = this.writable.getWriter();
+    await writer.write(data);
+    writer.releaseLock();
+  }
+
+  close() {
+    if (this.socket) {
+      try {
+        this.socket.close();
+      } catch (e) {}
+    }
+  }
+}
